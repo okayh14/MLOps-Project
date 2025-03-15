@@ -37,15 +37,15 @@ def split_blood_pressure(df):
     if it exists and is a string.
     """
     if "blood_pressure" in df.columns and df["blood_pressure"].dtype == object:
-        split_values = df["blood_pressure"].str.split('/', expand=True)
+        split_values = df["blood_pressure"].str.split("/", expand=True)
 
         if split_values.shape[1] == 2:  # Ensure we got exactly two columns
             df["systolic_blood_pressure"] = pd.to_numeric(
                 split_values[0], errors="coerce"
-                )
+            )
             df["diastolic_blood_pressure"] = pd.to_numeric(
                 split_values[1], errors="coerce"
-                )
+            )
 
         df = df.drop(columns=["blood_pressure"])  # Remove the original column
 
