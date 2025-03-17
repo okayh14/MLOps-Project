@@ -9,10 +9,10 @@ pip install --upgrade pip
 pip install -r backend/data_service/requirements.txt
 pip install -r backend/model_training/requirements.txt
 pip install -r backend/orchestrator/requirements.txt
-
+pip install -r tests/requirements.txt
 ```
 
-### windows
+### Windows
 
 ```bash
 python3 -m venv env
@@ -21,4 +21,5 @@ pip install --upgrade pip
 pip install -r backend/data_service/requirements.txt
 pip install -r backend/model_training/requirements.txt
 pip install -r backend/orchestrator/requirements.txt
+pip install -r tests/requirements.txt
 ```
