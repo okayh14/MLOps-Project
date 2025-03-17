@@ -152,7 +152,7 @@ def training_and_logging(prepared_data_path: str):
     ##########################
     # 8) Custom F-Beta=1.5 Scorer
     ##########################
-    
+
     fbeta_1_5_scorer = make_scorer(fbeta_score, beta=1.5)
     scoring = {
         "accuracy": "accuracy",
