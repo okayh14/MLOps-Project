@@ -32,7 +32,7 @@ def remove_patient_id(df):
 
 def split_blood_pressure(df):
     """
-    Splits the Blood Pressure column into Systolic and 
+    Splits the Blood Pressure column into Systolic and
     Diastolic BP if it exists and is a string.
     """
     if "blood_pressure" in df.columns and df["blood_pressure"].dtype == object:
