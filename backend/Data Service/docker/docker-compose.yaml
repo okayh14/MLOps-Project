@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: heart_risk_db
+    restart: always
+    environment:
+      POSTGRES_USER: sami
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: heart_risk_data
+    ports:
+      - "5432:5432"
+    volumes:
+      - heart_risk_db_data:/var/lib/postgresql/data
+
+  fastapi:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile  # Dockerfile liegt im 'docker' Ordner
+    container_name: fastapi_service
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: "postgresql://sami:secret@heart_risk_db:5432/heart_risk_data"
+      PYTHONPATH: "/app"  # Setzt PYTHONPATH, damit Python die Ordnerstruktur korrekt erkennt.
+    volumes:
+      - ..:/app  # Bindet das übergeordnete Verzeichnis (app) in den Container
+    command: ["bash", "-c", "python scripts/init.py && uvicorn api.api:app --host 0.0.0.0 --port 8000 --reload"]
+    
+volumes:
+  heart_risk_db_data:

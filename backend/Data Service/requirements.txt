@@ -1,2 +1,6 @@
-pandas
 fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pandas
+kagglehub

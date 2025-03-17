@@ -1,1 +1,0 @@
-# db tables and columns
