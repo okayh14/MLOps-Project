@@ -1,9 +1,9 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database.database import SessionLocal  # Datenbankverbindung importieren
-from database.models import PatientData 
+from database.models import PatientData
 from pydantic import BaseModel
-from services.data_preparation import data_preparation 
+from services.data_preparation import data_preparation
 import pandas as pd
 from database.database import Base, engine
 
@@ -51,25 +51,31 @@ class PatientRequest(BaseModel):
     hemisphere: str
     heart_attack_risk: bool
 
+
 # GET endpoint to fetch and process the first row of patient data
 @app.get("/data_preparation/")
 def get_prepared_data(db: Session = Depends(get_db)):
     """API-Endpunkt, der eine Zeile der Datenbank abruft und verarbeitet."""
-    
+
     # Step 1: Holen der ersten Zeile aus der DB
     patient = db.query(PatientData).first()  # Holt die erste Zeile mit .first()
 
     # Wenn keine Daten vorhanden sind, gib einen Fehler zurück
     if not patient:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No data available")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No data available"
+        )
 
     df = pd.DataFrame([patient.__dict__])  # Umwandeln in DataFrame (mit einer Zeile)
     # Step 3: Datenvorbereitung - Rufe die bestehende Funktion auf
-    prepared_data = data_preparation(df)  
+    prepared_data = data_preparation(df)
     # Step 4: Umwandeln des DataFrames zurück in ein Dictionary (für FastAPI)
-    prepared_data_dict = prepared_data.to_dict(orient="records")[0]  # Nur die erste Zeile als Dictionary
+    prepared_data_dict = prepared_data.to_dict(orient="records")[
+        0
+    ]  # Nur die erste Zeile als Dictionary
 
     return prepared_data_dict  # Return als JSON (automatisch durch FastAPI)
+
 
 # POST-Endpoint zum Hinzufügen eines Patienten
 @app.post("/patients/", status_code=status.HTTP_201_CREATED)
@@ -78,10 +84,14 @@ def create_patient(patient: PatientRequest, db: Session = Depends(get_db)):
 
     try:
         # Prüfen, ob die Patient-ID bereits existiert
-        if db.query(PatientData).filter(PatientData.patient_id == patient.patient_id).first():
+        if (
+            db.query(PatientData)
+            .filter(PatientData.patient_id == patient.patient_id)
+            .first()
+        ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Patient mit dieser ID existiert bereits."
+                detail="Patient mit dieser ID existiert bereits.",
             )
 
         # Neuen Patienten anlegen
@@ -98,5 +108,5 @@ def create_patient(patient: PatientRequest, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ein Fehler ist aufgetreten: {str(e)}"
+            detail=f"Ein Fehler ist aufgetreten: {str(e)}",
         )

@@ -1,8 +1,9 @@
 from sqlalchemy import Column, Integer, Boolean, String, Float
 from database.database import Base  # Direkt aus database.py importieren
 
+
 class PatientData(Base):
-    __tablename__ = 'heart_risk'
+    __tablename__ = "heart_risk"
 
     patient_id = Column(String, primary_key=True, index=True)
     age = Column(Integer, nullable=False)
