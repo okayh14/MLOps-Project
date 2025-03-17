@@ -13,7 +13,9 @@ Base.metadata.create_all(bind=engine)
 # Initialize FastAPI app
 app = FastAPI()
 
-# Dependency, die eine Session zurückgibt und sicherstellt, dass sie geschlossen wird.
+
+# Dependency, die eine Session zurückgibt und sicherstellt,
+# dass sie geschlossen wird.
 def get_db():
     db = SessionLocal()
     try:
@@ -58,7 +60,7 @@ def get_prepared_data(db: Session = Depends(get_db)):
     """API-Endpunkt, der eine Zeile der Datenbank abruft und verarbeitet."""
 
     # Step 1: Holen der ersten Zeile aus der DB
-    patient = db.query(PatientData).first()  # Holt die erste Zeile mit .first()
+    patient = db.query(PatientData).first()
 
     # Wenn keine Daten vorhanden sind, gib einen Fehler zurück
     if not patient:
@@ -66,7 +68,7 @@ def get_prepared_data(db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND, detail="No data available"
         )
 
-    df = pd.DataFrame([patient.__dict__])  # Umwandeln in DataFrame (mit einer Zeile)
+    df = pd.DataFrame([patient.__dict__])  # Umwandeln in DataFrame
     # Step 3: Datenvorbereitung - Rufe die bestehende Funktion auf
     prepared_data = data_preparation(df)
     # Step 4: Umwandeln des DataFrames zurück in ein Dictionary (für FastAPI)
