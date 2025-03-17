@@ -24,11 +24,15 @@ def initialize_database():
 def load_initial_data(session: Session):
     """Lädt die lokale CSV-Datei und speichert sie in der Datenbank."""
     # Relativer Pfad zur CSV-Datei im 'data' Ordner
-    csv_file = os.path.join(os.path.dirname(__file__), "..", "data", "data.csv")
+    csv_file = os.path.join(
+        os.path.dirname(__file__), "..", "data", "data.csv"
+    )
 
     # Überprüfen, ob die Datei existiert
     if not os.path.exists(csv_file):
-        raise FileNotFoundError(f"Die CSV-Datei wurde nicht gefunden: {csv_file}")
+        raise FileNotFoundError(
+            f"Die CSV-Datei wurde nicht gefunden: {csv_file}"
+        )
 
     print(f"CSV-Datei gefunden: {csv_file}")
     df = pd.read_csv(csv_file)
@@ -58,7 +62,9 @@ def load_initial_data(session: Session):
             income=row["income"],
             bmi=row["bmi"],
             triglycerides=row["triglycerides"],
-            physical_activity_days_per_week=row["physical_activity_days_per_week"],
+            physical_activity_days_per_week=row[
+                "physical_activity_days_per_week"
+            ],
             sleep_hours_per_day=row["sleep_hours_per_day"],
             country=row["country"],
             continent=row["continent"],
