@@ -69,6 +69,7 @@ def get_prepared_data(db: Session = Depends(get_db)):
         )
 
     df = pd.DataFrame([patient.__dict__])  # Umwandeln in DataFrame
+
     # Step 3: Datenvorbereitung - Rufe die bestehende Funktion auf
     prepared_data = data_preparation(df)
     # Step 4: Umwandeln des DataFrames zurück in ein Dictionary (für FastAPI)
