@@ -23,13 +23,13 @@ services:
     depends_on:
       - db
     ports:
-      - "8000:8000"
+      - "8001:8001"
     environment:
       DATABASE_URL: "postgresql://sami:secret@heart_risk_db:5432/heart_risk_data"
       PYTHONPATH: "/app"  # Setzt PYTHONPATH, damit Python die Ordnerstruktur korrekt erkennt.
     volumes:
       - ..:/app  # Bindet das übergeordnete Verzeichnis (app) in den Container
-    command: ["bash", "-c", "python scripts/init.py && uvicorn api.api:app --host 0.0.0.0 --port 8000 --reload"]
+    command: ["bash", "-c", "python scripts/init.py && uvicorn api.api:app --host 0.0.0.0 --port 8001 --reload"]
     
 volumes:
   heart_risk_db_data:

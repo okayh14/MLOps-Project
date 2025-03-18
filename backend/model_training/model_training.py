@@ -3,6 +3,7 @@ import warnings
 import datetime
 import pandas as pd
 import numpy as np
+import json
 
 import mlflow
 import mlflow.sklearn
@@ -21,7 +22,7 @@ from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedKFold, cross_validate
 from sklearn.metrics import make_scorer, fbeta_score
-
+from sklearn.base import BaseEstimator, TransformerMixin
 # Modelle
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -29,8 +30,9 @@ from xgboost import XGBClassifier
 
 warnings.filterwarnings("ignore")
 
+client = MlflowClient()
 
-def training_and_logging(prepared_data_path: str):
+def training_and_logging(json_data):
     """
     Liest den Datensatz ein und führt ein Pipeline-Experiment durch:
       - Modelle: LogisticRegression, RandomForest, XGBClassifier
@@ -47,7 +49,12 @@ def training_and_logging(prepared_data_path: str):
     ##########################
     # 1) Daten laden
     ##########################
-    df = pd.read_csv(prepared_data_path)
+    try:
+        df = pd.DataFrame(json_data)
+    except Exception as e:
+        print(f"Error processing data: {e}")
+        raise ValueError("Invalid JSON data provided.")
+    
     target_col = "heart_attack_risk"
 
     # Falls es eine ID-Spalte gibt, entfernen
@@ -298,10 +305,9 @@ def training_and_logging(prepared_data_path: str):
     results_df = pd.DataFrame(results)
     if not results_df.empty:
         results_df.sort_values(by="fbeta_1_5", ascending=False, inplace=True)
-        top4 = results_df.head(4)
+        top5 = results_df.head(5)
 
-        client = MlflowClient()
-        for rank, (idx, row) in enumerate(top4.iterrows(), start=1):
+        for rank, (idx, row) in enumerate(top5.iterrows(), start=1):
             best_run_id = row["run_id"]
             best_fbeta = row["fbeta_1_5"]
             best_model_name = row["model_name"]
@@ -335,7 +341,7 @@ def training_and_logging(prepared_data_path: str):
         print(f"Total runs: {len(results_df)}")
         print("Top 4 by F-Beta(1.5):")
         print(
-            top4[
+            top5[
                 [
                     "run_id",
                     "model_name",
@@ -348,6 +354,3 @@ def training_and_logging(prepared_data_path: str):
         )
     else:
         print("No valid runs were executed (all combos were skipped or errored out).")
-
-
-training_and_logging("prepared_dataset.csv")

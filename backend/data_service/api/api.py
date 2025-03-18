@@ -55,36 +55,42 @@ class PatientRequest(BaseModel):
 
 
 # GET endpoint to fetch and process the first row of patient data
-@app.get("/data_preparation/")
-def get_prepared_data(db: Session = Depends(get_db)):
-    """API-Endpunkt, der eine Zeile der Datenbank abruft und verarbeitet."""
-
-    # Step 1: Holen der ersten Zeile aus der DB
-    patient = db.query(PatientData).first()
+@app.get("/data")
+async def get_prepared_data(db: Session = Depends(get_db)):
+    """API-Endpunkt, der alle Zeilen der Datenbank abruft und verarbeitet."""
+    
+    # Step 1: Holen aller Zeilen aus der DB
+    patients = db.query(PatientData).all()
 
     # Wenn keine Daten vorhanden sind, gib einen Fehler zurück
-    if not patient:
+    if not patients:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="No data available"
         )
 
-    df = pd.DataFrame([patient.__dict__])  # Umwandeln in DataFrame
-
-    # Step 3: Datenvorbereitung - Rufe die bestehende Funktion auf
+    # Umwandeln in DataFrame: Alle patient.__dict__-Einträge in eine Liste packen
+    df = pd.DataFrame([patient.__dict__ for patient in patients])
+    
+    # Step 3: Datenvorbereitung - Aufruf der bestehenden Funktion
     prepared_data = data_preparation(df)
+    
     # Step 4: Umwandeln des DataFrames zurück in ein Dictionary (für FastAPI)
-    prepared_data_dict = prepared_data.to_dict(orient="records")[
-        0
-    ]  # Nur die erste Zeile als Dictionary
+    # Hier wird das Dictionary für alle Zeilen zurückgegeben.
+    prepared_data_dict = prepared_data.to_dict(orient="records")
 
-    return prepared_data_dict  # Return als JSON (automatisch durch FastAPI)
+    return prepared_data_dict  # Automatische Rückgabe als JSON durch FastAPI
 
+@app.post("/clean")
+async def clean_data(patient: PatientRequest):
+    patient_dict = patient.dict()
+    test_patient = pd.DataFrame([patient_dict])
+    prepared_data = data_preparation(test_patient)
+    return prepared_data.to_dict(orient="records")
 
 # POST-Endpoint zum Hinzufügen eines Patienten
-@app.post("/patients/", status_code=status.HTTP_201_CREATED)
-def create_patient(patient: PatientRequest, db: Session = Depends(get_db)):
+@app.post("/patients", status_code=status.HTTP_201_CREATED)
+async def create_patient(patient: PatientRequest, db: Session = Depends(get_db)):
     """Erstellt einen neuen Patienten in der Datenbank."""
-
     try:
         # Prüfen, ob die Patient-ID bereits existiert
         if (
@@ -113,3 +119,4 @@ def create_patient(patient: PatientRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ein Fehler ist aufgetreten: {str(e)}",
         )
+

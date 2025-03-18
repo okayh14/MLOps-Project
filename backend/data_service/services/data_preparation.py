@@ -19,7 +19,7 @@ def standardize_column_names(df):
     """
     Converts column names to lowercase and replaces spaces with underscores.
     """
-    df.columns = df.columns.str.lower().str.replace(" ", "_")
+    df.columns = [str(col).lower().replace(" ", "_") for col in df.columns]
     return df
 
 
