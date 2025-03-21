@@ -4,8 +4,7 @@ from database import Base  # Direkt aus database.py importieren
 
 class PatientData(Base):
     __tablename__ = "heart_risk"
-
-    patient_id = Column(String, primary_key=True, index=True)
+    patient_id = Column(String, primary_key=True)
     age = Column(Integer, nullable=False)
     sex = Column(String, nullable=False)
     cholesterol = Column(Integer, nullable=False)

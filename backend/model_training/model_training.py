@@ -177,8 +177,7 @@ def process_task(X, y, task, cv, scoring, experiment_name):
 
     try:
         with mlflow.start_run(run_name=run_name):
-            serialized_models_dir = './serialized_models/model_features'
-            os.makedirs(serialized_models_dir, exist_ok=True)
+            serialized_models_dir = './serialized_models'
             features_path = os.path.join(serialized_models_dir, "model_features.json")
             if not os.path.exists(features_path):
                 with open(features_path, "w") as f:
@@ -297,9 +296,11 @@ async def main(json_data):
         y = df[target_col]
         cat_cols = X.select_dtypes(include=["object", "category"]).columns.tolist()
 
-        # Feature-Spalten speichern
-        with open("model_features.json", "w") as f:
-            json.dump(X.columns.tolist(), f)
+        serialized_models_dir = './serialized_models'
+        os.makedirs(serialized_models_dir, exist_ok=True)
+        features_path = os.path.join(serialized_models_dir, "model_features.json")
+        with open(features_path, "w") as f:
+                json.dump({"columns": list(X.columns)}, f)
 
 
         print(
