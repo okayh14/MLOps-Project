@@ -2,8 +2,8 @@ import os
 import pandas as pd
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from database.database import SessionLocal, engine, Base
-from database.models import PatientData  # Importiere das PatientData-Modell
+from backend.data_service.database import SessionLocal, engine, Base
+from backend.data_service.models import PatientData  # Importiere das PatientData-Modell
 
 
 def initialize_database():
