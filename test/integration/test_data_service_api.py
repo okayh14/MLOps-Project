@@ -116,7 +116,7 @@ def test_clean_data(client, sample_patient):
     Test POST /clean with raw patient data.
     Expects the API to return the cleaned version of the data including transformed fields.
     """
-    response = client.post("/clean", json=sample_patient)
+    response = client.post("/clean", json=[sample_patient])
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
