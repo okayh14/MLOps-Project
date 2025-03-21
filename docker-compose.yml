@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: heart_risk_db
+    restart: always
+    environment:
+      POSTGRES_USER: sami         # Benutzername
+      POSTGRES_PASSWORD: secret   # Passwort
+      POSTGRES_DB: heart_risk_data
+    ports:
+      - "5432:5432"
+    volumes:
+      - heart_risk_db_data:/var/lib/postgresql/data
+    # Healthcheck, damit Postgres "healthy" wird, wenn es startet:
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "sami", "-d", "heart_risk_data"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
+
+  data_service:
+    build:
+      context: ./backend/data_service
+      dockerfile: Dockerfile
+    container_name: data_service
+    # Warte, bis db "healthy" ist (sprich: Postgres läuft wirklich)
+    depends_on: 
+      - db
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: "postgresql://sami:secret@db:5432/heart_risk_data"
+    volumes:
+      - ./backend/data_service:/app
+    command: ["bash", "-c", "python init.py && uvicorn api:app --host 0.0.0.0 --port 8001 --reload"]
+    # Healthcheck: data_service ist gesund, wenn GET /data erfolgreich ist
+
+  model_training:
+    build:
+      context: ./backend/model_training
+      dockerfile: Dockerfile
+    container_name: model_training
+    # Warte auf data_service, damit wir erst starten, wenn data_service fertig ist
+    depends_on:
+      - data_service
+    ports:
+      - "8002:8002"
+    environment:
+      DATA_SERVICE_URL: "http://data_service:8001"
+    volumes:
+      - ./backend/model_training/mlruns_data:/app/mlruns
+      - ./backend/model_training/serialized_models:/app/serialized_models
+    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
+
+  orchestrator:
+    build:
+      context: ./backend/Orchestrator
+      dockerfile: Dockerfile
+    container_name: orchestrator
+    # Warte auf data_service und model_training, damit startup-Routine sauber klappt
+    depends_on:
+      - data_service
+      - model_training
+    ports:
+      - "8003:8003"
+    environment:
+      DATA_SERVICE_URL: "http://data_service:8001"
+      MODEL_SERVICE_URL: "http://model_training:8002"
+    volumes:
+      - ./backend/Orchestrator:/app
+    command: ["uvicorn", "orchestrator:app", "--host", "0.0.0.0", "--port", "8003", "--reload"]
+    # Kein eigener Healthcheck hier, Orchestrator startet normal
+    # (du könntest einen definieren, falls du willst)
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: streamlit_frontend
+    depends_on:
+      - orchestrator
+    ports:
+      - "8501:8501"
+    environment:
+      ORCHESTRATOR_URL: "http://orchestrator:8003"
+    volumes:
+      - ./frontend/app.py:/app/app.py
+
+volumes:
+  heart_risk_db_data:
