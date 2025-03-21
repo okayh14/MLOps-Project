@@ -227,3 +227,4 @@ async def startup_event():
                 break
             logger.warning("model_training noch nicht erreichbar... retrying...")
             await asyncio.sleep(retry_interval)
+
