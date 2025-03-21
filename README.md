@@ -30,4 +30,5 @@ nacheinander ausführen:
 2. docker compose up
 
 nur wenn man wieder stoppen will:
+
 3. docker compose down --volumes --remove-orphans
