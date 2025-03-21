@@ -183,6 +183,7 @@ def process_task(X, y, task, cv, scoring, experiment_name):
             if not os.path.exists(features_path):
                 with open(features_path, "w") as f:
                     json.dump({"columns": list(X.columns)}, f)
+                    
             # Create pipeline
             pipeline_steps = []
 

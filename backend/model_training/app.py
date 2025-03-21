@@ -71,7 +71,7 @@ async def inference(features: List[Dict[str, Any]]):
 
     except Exception as e:
         import traceback
-        print("\n[❌ ERROR] Inference crashed with exception:")
+        print("\n[ERROR] Inference crashed with exception:")
         traceback.print_exc()  # <== Ohne das bekommen wir keinen Stacktrace!
         raise HTTPException(status_code=500, detail=str(e))
 
