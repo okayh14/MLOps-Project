@@ -1,11 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from database import SessionLocal  # Datenbankverbindung importieren
-from models import PatientData
+from backend.data_service.database import SessionLocal  # Datenbankverbindung importieren
+from backend.data_service.models import PatientData
 from pydantic import BaseModel
-from data_preparation import data_preparation
+from backend.data_service.data_preparation import data_preparation
 import pandas as pd
-from database import Base, engine
+from backend.data_service.database import Base, engine
 from typing import List, Dict, Any
 
 
