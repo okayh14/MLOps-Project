@@ -145,3 +145,4 @@ def test_create_patient(client, sample_patient):
         and p["continent"] == sample_patient["continent"]
         for p in data
     )
+    
