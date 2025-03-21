@@ -8,3 +8,4 @@ backend/model_training/mlruns_data
 backend/model_training/serialized_models
 serialized_models
 mlruns
+model_features.json
