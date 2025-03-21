@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from backend.data_service.services.data_preparation import (
+from backend.data_service.data_preparation import (
     remove_null_values,
     remove_duplicates,
     standardize_column_names,

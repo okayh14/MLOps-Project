@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from backend.data_service.services.data_preparation import data_preparation
+from backend.data_service.data_preparation import data_preparation
 
 
 @pytest.fixture
