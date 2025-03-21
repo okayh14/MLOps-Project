@@ -1,11 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from database.database import SessionLocal  # Datenbankverbindung importieren
-from database.models import PatientData
+from .database import SessionLocal  # Datenbankverbindung importieren
+from .models import PatientData
 from pydantic import BaseModel
-from services.data_preparation import data_preparation
+from .data_preparation import data_preparation
 import pandas as pd
-from database.database import Base, engine
+from .database import Base, engine
 
 
 Base.metadata.create_all(bind=engine)
@@ -13,6 +13,7 @@ Base.metadata.create_all(bind=engine)
 # Initialize FastAPI app
 app = FastAPI()
 
+print(f"Using database: {SessionLocal().bind.url}")
 
 # Dependency, die eine Session zurückgibt und sicherstellt,
 # dass sie geschlossen wird.
@@ -82,7 +83,7 @@ async def get_prepared_data(db: Session = Depends(get_db)):
 
 @app.post("/clean")
 async def clean_data(patient: PatientRequest):
-    patient_dict = patient.dict()
+    patient_dict = patient.model_dump()
     test_patient = pd.DataFrame([patient_dict])
     prepared_data = data_preparation(test_patient)
     return prepared_data.to_dict(orient="records")
