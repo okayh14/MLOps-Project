@@ -51,14 +51,15 @@ def split_blood_pressure(df):
     return df
 
 
-def data_preparation(df: pd.DataFrame):
-    """
-    Processes and returns the cleaned data as a DataFrame.
-    """
+def data_preparation(df: pd.DataFrame, drop_target: bool = False) -> pd.DataFrame:
     df = remove_null_values(df)
     df = remove_duplicates(df)
     df = standardize_column_names(df)
     df = remove_patient_id(df)
     df = split_blood_pressure(df)
+
+    # (A) Entfern die Zielspalte bei Inference
+    if drop_target and "heart_attack_risk" in df.columns:
+        df = df.drop(columns=["heart_attack_risk"])
 
     return df

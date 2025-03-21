@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, Boolean, String, Float
-from backend.data_service.database import Base  # Direkt aus database.py importieren
+from database import Base  # Direkt aus database.py importieren
 
 
 class PatientData(Base):

@@ -2,8 +2,8 @@ import os
 import pandas as pd
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from backend.data_service.database import SessionLocal, engine, Base
-from backend.data_service.models import PatientData  # Importiere das PatientData-Modell
+from database import SessionLocal, engine, Base
+from models import PatientData  # Importiere das PatientData-Modell
 
 
 def initialize_database():
@@ -24,7 +24,7 @@ def initialize_database():
 def load_initial_data(session: Session):
     """Lädt die lokale CSV-Datei und speichert sie in der Datenbank."""
     # Relativer Pfad zur CSV-Datei im 'data' Ordner
-    csv_file = os.path.join(os.path.dirname(__file__), "..", "data", "data.csv")
+    csv_file = os.path.join(os.getcwd(), "data.csv")
 
     # Überprüfen, ob die Datei existiert
     if not os.path.exists(csv_file):

@@ -1,11 +1,12 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from .database import SessionLocal  # Datenbankverbindung importieren
-from .models import PatientData
+from database import SessionLocal  # Datenbankverbindung importieren
+from models import PatientData
 from pydantic import BaseModel
-from .data_preparation import data_preparation
+from data_preparation import data_preparation
 import pandas as pd
-from .database import Base, engine
+from database import Base, engine
+from typing import List, Dict, Any
 
 
 Base.metadata.create_all(bind=engine)
@@ -13,7 +14,6 @@ Base.metadata.create_all(bind=engine)
 # Initialize FastAPI app
 app = FastAPI()
 
-print(f"Using database: {SessionLocal().bind.url}")
 
 # Dependency, die eine Session zurückgibt und sicherstellt,
 # dass sie geschlossen wird.
@@ -59,7 +59,7 @@ class PatientRequest(BaseModel):
 @app.get("/data")
 async def get_prepared_data(db: Session = Depends(get_db)):
     """API-Endpunkt, der alle Zeilen der Datenbank abruft und verarbeitet."""
-    
+
     # Step 1: Holen aller Zeilen aus der DB
     patients = db.query(PatientData).all()
 
@@ -71,22 +71,24 @@ async def get_prepared_data(db: Session = Depends(get_db)):
 
     # Umwandeln in DataFrame: Alle patient.__dict__-Einträge in eine Liste packen
     df = pd.DataFrame([patient.__dict__ for patient in patients])
-    
+
     # Step 3: Datenvorbereitung - Aufruf der bestehenden Funktion
     prepared_data = data_preparation(df)
-    
+
     # Step 4: Umwandeln des DataFrames zurück in ein Dictionary (für FastAPI)
     # Hier wird das Dictionary für alle Zeilen zurückgegeben.
     prepared_data_dict = prepared_data.to_dict(orient="records")
 
     return prepared_data_dict  # Automatische Rückgabe als JSON durch FastAPI
 
+
+
 @app.post("/clean")
-async def clean_data(patient: PatientRequest):
-    patient_dict = patient.model_dump()
-    test_patient = pd.DataFrame([patient_dict])
-    prepared_data = data_preparation(test_patient)
-    return prepared_data.to_dict(orient="records")
+async def clean_data_api(patients: List[Dict[str, Any]], drop_target: bool = False):
+    test_patient = pd.DataFrame(patients)
+    prepared_df = data_preparation(test_patient, drop_target=drop_target)
+    return prepared_df.to_dict(orient="records")
+
 
 # POST-Endpoint zum Hinzufügen eines Patienten
 @app.post("/patients", status_code=status.HTTP_201_CREATED)
@@ -120,4 +122,3 @@ async def create_patient(patient: PatientRequest, db: Session = Depends(get_db))
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ein Fehler ist aufgetreten: {str(e)}",
         )
-
