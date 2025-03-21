@@ -1,10 +1,13 @@
 FROM python:3.9
+
 WORKDIR /app
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
 COPY . .
 
-# Warte-Script anlegen (z. B. wait-for-db.sh)
+# Warte-Script erstellen
 RUN echo '#!/bin/bash\n\
 echo "Waiting for Postgres..."\n\
 until nc -z db 5432; do\n\

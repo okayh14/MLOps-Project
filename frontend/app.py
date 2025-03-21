@@ -1,92 +1,123 @@
 import streamlit as st
 import requests
 import os
+import random
+import string
 
-# Wir holen uns die URL des Orchestrators aus einer ENV-Variable
-# (oder defaulten zu http://localhost:8003, falls nicht gesetzt)
 ORCHESTRATOR_URL = os.getenv("ORCHESTRATOR_URL", "http://orchestrator:8003")
 
+def generate_unique_id(length=8):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+def build_form():
+    st.subheader("Patientendaten")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        age = st.number_input("Age", min_value=0, max_value=120, value=50)
+        sex = st.selectbox("Sex", ["Male", "Female"])
+        cholesterol = st.number_input("Cholesterol", min_value=0, max_value=1000, value=200)
+        blood_pressure = st.text_input("Blood Pressure (Systolic/Diastolic)", "120/80")
+        heart_rate = st.number_input("Heart Rate", min_value=0, max_value=300, value=70)
+        diabetes = st.selectbox("Diabetes", ["False", "True"])
+        family_history = st.selectbox("Family History", ["False", "True"])
+        smoking = st.selectbox("Smoking", ["False", "True"])
+        obesity = st.selectbox("Obesity", ["False", "True"])
+        alcohol_consumption = st.selectbox("Alcohol Consumption", ["False", "True"])
+        exercise_hours_per_week = st.number_input("Exercise Hours Per Week", min_value=0.0, value=3.0)
+        diet = st.selectbox("Diet", ["Balanced", "Average", "Unhealthy"])
+
+    with col2:
+        previous_heart_problems = st.selectbox("Previous Heart Problems", ["False", "True"])
+        medication_use = st.selectbox("Medication Use", ["False", "True"])
+        stress_level = st.number_input("Stress Level (0-20)", min_value=0, max_value=20, value=5)
+        sedentary_hours_per_day = st.number_input("Sedentary Hours Per Day", min_value=0.0, value=4.0)
+        income = st.number_input("Income", min_value=0, value=30000)
+        bmi = st.number_input("BMI", min_value=0.0, value=25.0)
+        triglycerides = st.number_input("Triglycerides", min_value=0, max_value=10000, value=150)
+        physical_activity_days_per_week = st.number_input("Physical Activity Days Per Week", min_value=0, max_value=7, value=3)
+        sleep_hours_per_day = st.number_input("Sleep Hours Per Day", min_value=0, max_value=24, value=7)
+        country = st.selectbox("Country", ["USA", "Germany", "France", "India", "Other"])
+        continent = st.selectbox("Continent", ["North America", "Europe", "Asia", "Africa", "South America"])
+        hemisphere = st.selectbox("Hemisphere", ["Northern Hemisphere", "Southern Hemisphere"])
+
+    return {
+        "age": age,
+        "sex": sex,
+        "cholesterol": cholesterol,
+        "blood_pressure": blood_pressure,
+        "heart_rate": heart_rate,
+        "diabetes": diabetes == "True",
+        "family_history": family_history == "True",
+        "smoking": smoking == "True",
+        "obesity": obesity == "True",
+        "alcohol_consumption": alcohol_consumption == "True",
+        "exercise_hours_per_week": exercise_hours_per_week,
+        "diet": diet,
+        "previous_heart_problems": previous_heart_problems == "True",
+        "medication_use": medication_use == "True",
+        "stress_level": stress_level,
+        "sedentary_hours_per_day": sedentary_hours_per_day,
+        "income": income,
+        "bmi": bmi,
+        "triglycerides": triglycerides,
+        "physical_activity_days_per_week": physical_activity_days_per_week,
+        "sleep_hours_per_day": sleep_hours_per_day,
+        "country": country,
+        "continent": continent,
+        "hemisphere": hemisphere
+    }
+
 def main():
-    st.title("Heart Disease Risk Predictor")
+    st.title("📈 Herzinfarkt-Risiko Vorhersage & Datenpflege")
+    mode = st.radio("Was möchtest du tun?", ["Prognose erstellen", "Neue Daten einpflegen & Training starten"])
 
-    st.markdown("""
-        Dieses Dashboard erlaubt es dir, Patientendaten einzugeben und 
-        eine Risikoeinschätzung für Herzinfarkte zu erhalten.
-    """)
+    with st.form("patient_form"):
+        form_data = build_form()
 
-    # Formular für Patientendaten
-    patient_id = st.text_input("Patient ID", value="P0001")
-    age = st.number_input("Age", min_value=0, max_value=120, value=50)
-    sex = st.selectbox("Sex", ["male", "female"])  
-    cholesterol = st.number_input("Cholesterol", min_value=0, max_value=1000, value=200)
-    blood_pressure = st.text_input("Blood Pressure (Systolic/Diastolic)", "120/80")
-    heart_rate = st.number_input("Heart Rate", min_value=0, max_value=300, value=70)
-    diabetes = st.checkbox("Diabetes?", value=False)
-    family_history = st.checkbox("Family History?", value=False)
-    smoking = st.checkbox("Smoking?", value=False)
-    obesity = st.checkbox("Obesity?", value=False)
-    alcohol_consumption = st.checkbox("Alcohol Consumption?", value=False)
-    exercise_hours_per_week = st.number_input("Exercise hours/week", min_value=0.0, value=3.0)
-    diet = st.text_input("Diet", "balanced")
-    previous_heart_problems = st.checkbox("Previous heart problems?", value=False)
-    medication_use = st.checkbox("Medication use?", value=False)
-    stress_level = st.number_input("Stress Level (0-10?)", min_value=0, max_value=20, value=5)
-    sedentary_hours_per_day = st.number_input("Sedentary Hours/Day", min_value=0.0, value=4.0)
-    income = st.number_input("Income", value=30000)
-    bmi = st.number_input("BMI", value=25.0)
-    triglycerides = st.number_input("Triglycerides", min_value=0, max_value=10000, value=150)
-    physical_activity_days_per_week = st.number_input("Physical Activity Days/Week", min_value=0, max_value=7, value=3)
-    sleep_hours_per_day = st.number_input("Sleep Hours/Day", min_value=0, max_value=24, value=7)
-    country = st.text_input("Country", "USA")
-    continent = st.text_input("Continent", "North America")
-    hemisphere = st.text_input("Hemisphere", "Western")
+        if mode == "Neue Daten einpflegen & Training starten":
+            heart_attack_risk = st.selectbox("Heart Attack Risk", ["False", "True"])
+            form_data["heart_attack_risk"] = heart_attack_risk == "True"
 
-    if st.button("Predict Risk"):
-        # Wir packen alle Felder in ein Dictionary, so wie es im Backend erwartet wird.
-        patient_data = {
-            "patient_id": patient_id,
-            "age": age,
-            "sex": sex,
-            "cholesterol": cholesterol,
-            "blood_pressure": blood_pressure,
-            "heart_rate": heart_rate,
-            "diabetes": diabetes,
-            "family_history": family_history,
-            "smoking": smoking,
-            "obesity": obesity,
-            "alcohol_consumption": alcohol_consumption,
-            "exercise_hours_per_week": exercise_hours_per_week,
-            "diet": diet,
-            "previous_heart_problems": previous_heart_problems,
-            "medication_use": medication_use,
-            "stress_level": stress_level,
-            "sedentary_hours_per_day": sedentary_hours_per_day,
-            "income": income,
-            "bmi": bmi,
-            "triglycerides": triglycerides,
-            "physical_activity_days_per_week": physical_activity_days_per_week,
-            "sleep_hours_per_day": sleep_hours_per_day,
-            "country": country,
-            "continent": continent,
-            "hemisphere": hemisphere,
-            
-        }
+        submitted = st.form_submit_button("Absenden")
 
-        # Rufe den Orchestrator an, um /start_inference zu triggern.
-        try:
-            # /start_inference erwartet eine Liste[Dict], also packen wir patient_data in eine Liste
-            inference_url = f"{ORCHESTRATOR_URL}/start_inference"
-            response = requests.post(inference_url, json=[patient_data], timeout=120)
-            response.raise_for_status()
-            result_json = response.json()
+        if submitted:
+            form_data["patient_id"] = generate_unique_id()
 
-            st.subheader("Resultat der Vorhersage:")
-            st.write(result_json.get("result_text", "Keine Antwort erhalten."))
-            st.write("Detaillierte Ergebnisse:", result_json.get("final_results"))
-            st.write("Durchschnittliche Risiko-Wahrscheinlichkeit:", result_json.get("mean_proba"))
-        
-        except requests.exceptions.RequestException as err:
-            st.error(f"Fehler beim Request: {err}")
+            if mode == "Prognose erstellen":
+                # Vorhersage benötigt formatierte Keys
+                prediction_payload = [{
+                    k.replace("_", " ").title(): v for k, v in form_data.items()
+                }]
+
+                try:
+                    st.info("Starte Vorhersage...")
+                    response = requests.post(f"{ORCHESTRATOR_URL}/start_inference", json=prediction_payload, timeout=500)
+                    response.raise_for_status()
+                    res = response.json()
+
+                    st.success("Vorhersage abgeschlossen!")
+                    st.write("**Zusammenfassung:**", res.get("result_text"))
+                    st.write("**Durchschnittliches Risiko:**", res.get("mean_proba"))
+                    st.write("**Modelle:**")
+                    st.dataframe(res.get("final_results"))
+
+                except Exception as e:
+                    st.error(f"Fehler bei der Vorhersage: {e}")
+
+            else:
+                # Training benötigt originalen Payload (snake_case)
+                try:
+                    st.warning("Training wird gestartet... Bitte Seite nicht verlassen oder aktualisieren.")
+                    with st.spinner("Lade neue Daten hoch und starte Training..."):
+                        response = requests.post(f"{ORCHESTRATOR_URL}/trigger_upload", json=form_data, timeout=None)
+                        response.raise_for_status()
+                        result = response.json()
+
+                    st.success("Training erfolgreich abgeschlossen!")
+                    st.write(result)
+                except Exception as e:
+                    st.error(f"Fehler beim Hochladen oder Training: {e}")
 
 if __name__ == "__main__":
     main()

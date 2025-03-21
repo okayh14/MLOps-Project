@@ -36,22 +36,42 @@ def setup_experiment():
     return experiment_name
 
 
-def encode_labels(X):
-    if isinstance(X, pd.DataFrame):
-        return X.apply(lambda col: LabelEncoder().fit_transform(col))
-    else:
-        # This assumes X is a list-like object of one column if directly used in FunctionTransformer without ColumnTransformer
-        return pd.Series(LabelEncoder().fit_transform(X))
+# Neuer LabelEncoderWrapper, der die Kategorien speichert
+class LabelEncoderWrapper(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        self.encoders = {}
+
+    def fit(self, X, y=None):
+        for col in X.columns:
+            le = LabelEncoder()
+            le.fit(X[col].astype(str))
+            self.encoders[col] = le
+        return self
+
+    def transform(self, X):
+        X_transformed = X.copy()
+        for col in X.columns:
+            le = self.encoders.get(col)
+            if le:
+                # Werte, die unbekannt sind, ersetzen wir mit "Unknown"
+                X_transformed[col] = X_transformed[col].astype(str).apply(
+                    lambda val: val if val in le.classes_ else "Unknown"
+                )
+                # Füge "Unknown" zu Klassen hinzu, falls noch nicht vorhanden
+                if "Unknown" not in le.classes_:
+                    le.classes_ = np.append(le.classes_, "Unknown")
+                X_transformed[col] = le.transform(X_transformed[col].astype(str))
+        return X_transformed
 
 
-label_encoder = FunctionTransformer(encode_labels, validate=False)
-
-
+# ColumnTransformer mit OneHotEncoder anpassen
+# Wichtig: handle_unknown="ignore" ist bereits gesetzt für OneHotEncoder
+# Aber für OrdinalEncoder setzen wir es jetzt explizit auch.
 def configure_models(cat_cols):
     encoder_options = {
         "OneHot": ("onehot", OneHotEncoder(handle_unknown="ignore"), cat_cols),
-        "Ordinal": ("ordinal", OrdinalEncoder(), cat_cols),
-        "Label": ("label", label_encoder, cat_cols),
+        "Ordinal": ("ordinal", OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1), cat_cols),
+        "Label": ("label", LabelEncoderWrapper(), cat_cols),
     }
     scaler_options = {
         "None": None,

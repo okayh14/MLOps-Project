@@ -23,3 +23,11 @@ pip install -r backend/model_training/requirements.txt
 pip install -r backend/orchestrator/requirements.txt
 pip install -r test/requirements.txt
 ```
+
+nacheinander ausführen:
+
+- 1. docker compose build --no-cache
+- 2. docker compose up
+
+nur wenn man wieder stoppen will:
+- 3. docker compose down --volumes --remove-orphans

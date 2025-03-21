@@ -68,6 +68,7 @@ async def get_data():
 
     return None
 
+
 @app.post("/upload")
 async def upload_data(data: dict):
     try:
@@ -79,6 +80,7 @@ async def upload_data(data: dict):
         logger.error(f"An error occurred: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     
+
 @app.post("/trigger_upload")
 async def upload_retrain(data: dict):
     try:
@@ -101,7 +103,6 @@ async def orchestrator_train_models(train_data: dict):
     except Exception as e:
         logger.error(f"Error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
-
 
 @app.post("/call_inference")
 async def call_prediction(features: List[Dict[str, Any]]):
@@ -135,7 +136,6 @@ async def call_prediction(features: List[Dict[str, Any]]):
         logger.error(f"An error occurred in call_prediction: {e}")
         raise HTTPException(status_code=400, detail=f"Prediction error: {str(e)}")
 
-
 async def _trigger_training_logic():
     """Internal function with the training trigger logic"""
     data = await get_data()
@@ -143,7 +143,6 @@ async def _trigger_training_logic():
         raise HTTPException(status_code=400, detail="No data for training.")
     resp = await orchestrator_train_models(data)
     return {"message": "Training successful.", "info": resp}
-
 
 @app.post("/start_training") 
 async def trigger_training():
@@ -154,7 +153,6 @@ async def trigger_training():
     except Exception as e:
         logger.error(f"Error in trigger_training: {e}")
         raise HTTPException(status_code=400, detail=str(e))
-
 
 @app.post("/start_inference")
 async def start_prediction(features: List[Dict[str, Any]]):
@@ -172,7 +170,6 @@ async def start_prediction(features: List[Dict[str, Any]]):
         return prediction_response
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Prediction error: {str(e)}")
-
 
 @app.on_event("startup")
 async def startup_event():
