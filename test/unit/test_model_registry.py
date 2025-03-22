@@ -53,7 +53,9 @@ async def test_register_top_models_success():
 @pytest.mark.asyncio
 async def test_serialize_and_compress_models_real(tmp_path):
     # 1) MLflow auf tmp_path "umleiten"
+    # Nicht nur Tracking, sondern auch Registry
     mlflow.set_tracking_uri(f"file://{tmp_path}/mlruns")
+    mlflow.set_registry_uri(f"file://{tmp_path}/mlruns")  
 
     # 2) Experiment anlegen
     experiment_name = "test-experiment"
