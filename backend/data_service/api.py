@@ -55,32 +55,33 @@ class PatientRequest(BaseModel):
     heart_attack_risk: bool
 
 
-# GET endpoint to fetch and process the first row of patient data
+# GET endpoint to fetch and process all patient data
 @app.get("/data")
 async def get_prepared_data(db: Session = Depends(get_db)):
-    """API-Endpunkt, der alle Zeilen der Datenbank abruft und verarbeitet."""
+    """API-Endpunkt, der alle Patienten aus der Datenbank abruft und verarbeitet."""
 
-    # Step 1: Holen aller Zeilen aus der DB
+    # Alle Patienten aus der DB holen
     patients = db.query(PatientData).all()
 
-    # Wenn keine Daten vorhanden sind, gib einen Fehler zurück
     if not patients:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="No data available"
         )
 
-    # Umwandeln in DataFrame: Alle patient.__dict__-Einträge in eine Liste packen
-    df = pd.DataFrame([patient.__dict__ for patient in patients])
+    # Alle Patienten-Datensätze in Dictionaries umwandeln (SQLAlchemy-Metadaten rausfiltern)
+    raw_data = [
+        {k: v for k, v in vars(patient).items() if k != "_sa_instance_state"}
+        for patient in patients
+    ]
 
-    # Step 3: Datenvorbereitung - Aufruf der bestehenden Funktion
+    # In DataFrame umwandeln
+    df = pd.DataFrame(raw_data)
+
+    # Datenvorbereitung
     prepared_data = data_preparation(df)
 
-    # Step 4: Umwandeln des DataFrames zurück in ein Dictionary (für FastAPI)
-    # Hier wird das Dictionary für alle Zeilen zurückgegeben.
-    prepared_data_dict = prepared_data.to_dict(orient="records")
-
-    return prepared_data_dict  # Automatische Rückgabe als JSON durch FastAPI
-
+    # Rückgabe als JSON
+    return prepared_data.to_dict(orient="records")
 
 
 @app.post("/clean")
@@ -105,16 +106,20 @@ async def create_patient(patient: PatientRequest, db: Session = Depends(get_db))
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Patient mit dieser ID existiert bereits.",
             )
+        try:
 
-        # Neuen Patienten anlegen
-        new_patient = PatientData(**patient.model_dump())
+            # Neuen Patienten anlegen
+            new_patient = PatientData(**patient.model_dump())
+        except Exception as e:
+            print(e)
 
         db.add(new_patient)
         db.flush()  # Führt SQL aus, aber committet noch nicht
         db.commit()  # Speichert die Änderungen
         db.refresh(new_patient)  # Holt die aktualisierten Daten aus der DB
 
-        return new_patient  # Gibt den neu erstellten Patienten zurück
+        return {'status':'success',
+                'new_patient': new_patient}  # Gibt den neu erstellten Patienten zurück
 
     except Exception as e:
         db.rollback()

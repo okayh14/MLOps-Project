@@ -11,6 +11,8 @@ from pydantic import BaseModel
 import mlflow
 import zipfile
 from typing import List, Dict, Any
+import time
+import traceback
 
 # Setup logging
 logging.basicConfig()
@@ -21,7 +23,6 @@ app = FastAPI()
 DATA_SERVICE_URL = os.getenv("DATA_SERVICE_URL", "http://data_service:8001")
 MODEL_SERVICE_URL = os.getenv("MODEL_SERVICE_URL", "http://model_training:8002")
 
-# Define a global variable to hold loaded models
 loaded_models = {}
 
 async def assess_heart_disease_risk(result, mean_proba, threshold=0.5):
@@ -67,43 +68,31 @@ async def get_data():
 
     return None
 
-# @app.post("/clean")
-# async def clean_data(data: List[Dict[str, Any]]):
-#     try:
-#         async with httpx.AsyncClient(timeout=600.0) as client:
-#             response = await client.post(DATA_SERVICE_URL + "/clean", json=data)
-#             response.raise_for_status()
-#         return response.json()
-#     except Exception as e:
-#         logger.error(f"An error occurred: {e}")
-
 @app.post("/upload")
 async def upload_data(data: dict):
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(DATA_SERVICE_URL + "/patients", json=data)
             response.raise_for_status()
-            train_data = await get_data()
-            if train_data:
-                training_response = await orchestrator_train_models(train_data)
-                return {
-                    "success": True,
-                    "upload_status": response.status_code,
-                    "training_status": training_response["status_code"],
-                }
-            else:
-                raise HTTPException(
-                    status_code=500, detail="Failed to fetch data for training"
-                )
+            return response.json()
     except Exception as e:
         logger.error(f"An error occurred: {e}")
         raise HTTPException(status_code=400, detail=str(e))
-
-
-# Im Orchestrator
+    
+@app.post("/trigger_upload")
+async def upload_retrain(data: dict):
+    try:
+        response_upload = await upload_data(data)
+        response_training = await trigger_training()
+        return {
+            'response_upload':response_upload.get('status'),
+            'response_training':response_training.get('message')
+        }
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+    
 @app.post("/call_training")
 async def orchestrator_train_models(train_data: dict): 
-    # NEUER NAME
     try:
         async with httpx.AsyncClient(timeout=60000.0) as client:
             resp = await client.post(f"{MODEL_SERVICE_URL}/train", json=train_data)
@@ -121,13 +110,11 @@ async def call_prediction(features: List[Dict[str, Any]]):
             response = await client.post(
                 MODEL_SERVICE_URL + "/inference", json=features
             )
-            response.raise_for_status()  # Falls HTTP 500 etc.
+            response.raise_for_status()  
             response_data = response.json()
 
-        # 🧪 Debug: Logge die Antwort
         logger.info(f"Inference Response: {response_data}")
 
-        # Sicherstellen, dass die Keys da sind
         if "final_results" not in response_data or "mean_proba" not in response_data:
             raise HTTPException(
                 status_code=400,
@@ -155,9 +142,10 @@ async def _trigger_training_logic():
     if not data:
         raise HTTPException(status_code=400, detail="No data for training.")
     resp = await orchestrator_train_models(data)
-    return {"message": "Training triggered.", "info": resp}
+    return {"message": "Training successful.", "info": resp}
 
-@app.post("/start_training") # für datenupload & manuell
+
+@app.post("/start_training") 
 async def trigger_training():
     """API endpoint for training"""
     try:
@@ -172,16 +160,14 @@ async def trigger_training():
 async def start_prediction(features: List[Dict[str, Any]]):
     try:
         async with httpx.AsyncClient(timeout=600.0) as client:
-            # => setze drop_target=True (wir wollen 'heart_attack_risk' raus!)
             response = await client.post(
                 DATA_SERVICE_URL + "/clean",
                 json=features,
-                params={"drop_target": True}  # oder als body
+                params={"drop_target": True}  
             )
             response.raise_for_status()
             clean_features = response.json()
 
-        # Danach => /call_inference
         prediction_response = await call_prediction(clean_features)
         return prediction_response
     except Exception as e:
@@ -194,13 +180,9 @@ async def startup_event():
     Prüft /check bei model_training. 
     Falls "No models available.", ruft /start_training auf.
     """
-    import time
-    import traceback
-
     logger.info("Startup: Warte auf model_training...")
-
     start_time = time.time()
-    timeout = 10  # Sek. Gesamtwartezeit
+    timeout = 10  
     retry_interval = 2
 
     while True:
