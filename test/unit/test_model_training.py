@@ -2,7 +2,9 @@ import pytest
 import pandas as pd
 import numpy as np
 import mlflow
+import os
 import logging
+from unittest.mock import patch, MagicMock
 from sklearn.discriminant_analysis import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -11,7 +13,7 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from unittest.mock import patch, MagicMock
 from backend.model_training.model_training import (
     setup_experiment,
-    encode_labels,
+    LabelEncoderWrapper,
     configure_models,
     train_and_evaluate,
 )
@@ -62,22 +64,36 @@ def test_setup_experiment():
         mock_set_experiment.assert_called_once()
 
 
-def test_encode_labels(mock_data):
+def test_label_encoder_wrapper_dataframe(mock_data):
     """
-    Tests that LabelEncoder is correctly applied to categorical columns.
+    Tests that LabelEncoderWrapper correctly transforms categorical columns.
     """
-    df_encoded = encode_labels(mock_data[["sex"]]) 
-    assert isinstance(df_encoded, pd.DataFrame)
-    assert df_encoded["sex"].nunique() == 2  
+    X = mock_data[["sex", "diet"]]
+    encoder = LabelEncoderWrapper()
+    encoder.fit(X)
+    X_transformed = encoder.transform(X)
+
+    assert isinstance(X_transformed, pd.DataFrame)
+    assert X_transformed.shape == X.shape
+    assert set(X_transformed.columns) == set(X.columns)
+    assert all(pd.api.types.is_integer_dtype(X_transformed[col]) for col in X_transformed.columns)
 
 
-def test_encode_labels_list_input():
+def test_label_encoder_wrapper_unknown_value():
     """
-    Tests label encoding when input is a list instead of a DataFrame.
+    Tests that LabelEncoderWrapper handles unknown categories gracefully.
     """
-    result = encode_labels(["Male", "Female", "Male"])
-    assert isinstance(result, pd.Series)
-    assert set(result.unique()) <= {0, 1}
+    import pandas as pd
+    train = pd.DataFrame({"col": ["A", "B", "C"]})
+    test = pd.DataFrame({"col": ["A", "B", "D"]})  # 'D' is unknown
+
+    encoder = LabelEncoderWrapper()
+    encoder.fit(train)
+    transformed = encoder.transform(test)
+
+    assert isinstance(transformed, pd.DataFrame)
+    assert "col" in transformed.columns
+    assert transformed["col"].isin(encoder.encoders["col"].transform(encoder.encoders["col"].classes_)).all()
 
 
 def test_configure_models():
@@ -94,33 +110,53 @@ def test_configure_models():
     assert isinstance(scoring, dict)
 
 
-def test_train_and_evaluate(mock_data):
+def test_train_and_evaluate(mock_data, tmp_path):
     """
-    Runs a minimal train_and_evaluate test with two model configs and no scaling.
+    Tests the full training and evaluation pipeline with minimal configuration.
+    All MLflow artifacts and tracking data are stored in a temporary directory.
+    
+    Args:
+        mock_data (pd.DataFrame): Synthetic test dataset provided by pytest fixture
+        tmp_path (pathlib.Path): Temporary directory provided by pytest for isolated file operations
     """
-
     logging.getLogger("mlflow").setLevel(logging.ERROR)
 
+    # Tell MLflow to use temp dir instead of creating ./mlruns
+    mlflow.set_tracking_uri(tmp_path.as_uri())
+    
+    # Set working directory to temporary path
+    os.chdir(tmp_path)
+    # Create dummy directory expected by the pipeline
+    (tmp_path / "serialized_models").mkdir(parents=True, exist_ok=True)
+
+    # Prepare data
     X = mock_data.drop(columns=["heart_attack_risk"])
     y = mock_data["heart_attack_risk"]
 
+    # Minimal config for two models
     encoder_options = {
-        "Label": ("label", FunctionTransformer(encode_labels, validate=False), ["sex"])
+        "Label": ("label", LabelEncoderWrapper(), ["sex"])
     }
-    scaler_options = {
-        "None": None
-    }
+    scaler_options = {"None": None}
     forbidden_combos = []
     model_param_grid = {
-        "LogisticRegression":  [{"C": 0.01, "solver": "lbfgs"}],
+        "LogisticRegression": [{"C": 0.01, "solver": "lbfgs"}],
         "RandomForest": [{"n_estimators": 10, "max_depth": 3}]
     }
-    feat_select_options = {
-        "None": None
-    }
+    feat_select_options = {"None": None}
     scoring = {"accuracy": "accuracy"}
 
-    with patch("mlflow.start_run"), patch("mlflow.log_param"), patch("mlflow.log_metrics"):
+    # Prepare mocked MLflow context
+    fake_run = MagicMock()
+    fake_run.__enter__.return_value = fake_run
+    fake_run.info.run_id = "test_run_id"
+
+    with patch("mlflow.start_run", return_value=fake_run), \
+         patch("mlflow.active_run", return_value=fake_run), \
+         patch("mlflow.log_param"), \
+         patch("mlflow.log_metrics"), \
+         patch("mlflow.sklearn.log_model"):
+        
         results = train_and_evaluate(
             X, y,
             encoder_options,
@@ -134,7 +170,7 @@ def test_train_and_evaluate(mock_data):
         )
 
     assert isinstance(results, pd.DataFrame)
-    assert len(results) >= 2  
+    assert len(results) >= 2
 
 
 def test_forbidden_combo_skipped(mock_data):
@@ -182,7 +218,7 @@ def test_invalid_model_name_handling(mock_data):
     y = mock_data["heart_attack_risk"]
 
     encoder_options = {
-        "Label": ("label", FunctionTransformer(encode_labels, validate=False), ["sex"])
+        "Label": ("label", LabelEncoderWrapper(), ["sex"])
     }
     scaler_options = {"None": None}
     forbidden_combos = []
