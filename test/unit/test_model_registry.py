@@ -53,6 +53,8 @@ async def test_serialize_and_compress_models_real(tmp_path):
     """
     Train and register a real model, then test whether it gets serialized correctly to disk.
     """
+    mlflow.set_tracking_uri(f"file://{tmp_path}/mlruns")
+
     # Train a real model using sklearn
     iris = load_iris()
     X, y = iris.data, iris.target
