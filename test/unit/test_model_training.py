@@ -1,15 +1,10 @@
 import pytest
 import pandas as pd
-import numpy as np
 import mlflow
 import os
 import logging
-from unittest.mock import patch, MagicMock
 from sklearn.discriminant_analysis import StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.pipeline import FunctionTransformer
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder
 from unittest.mock import patch, MagicMock
 from backend.model_training.model_training import (
     setup_experiment,

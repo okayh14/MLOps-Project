@@ -1,6 +1,5 @@
 import pytest
 import pandas as pd
-import os
 import json
 import joblib
 from sklearn.linear_model import LogisticRegression

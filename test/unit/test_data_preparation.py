@@ -1,4 +1,3 @@
-import pytest
 import pandas as pd
 from backend.data_service.data_preparation import (
     remove_null_values,

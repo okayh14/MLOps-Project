@@ -1,11 +1,8 @@
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 from typing import List, Dict, Any
 import os
-import pandas as pd
 from mlflow.tracking import MlflowClient
-import dill
 from backend.model_training.model_registry import (
     register_top_models,
     serialize_and_compress_models,
@@ -13,8 +10,6 @@ from backend.model_training.model_registry import (
 )
 from backend.model_training.model_training import main
 from backend.model_training.inference import prepare_and_predict
-import joblib
-import httpx
 
 # Initialize FastAPI app
 app = FastAPI()

@@ -4,16 +4,12 @@ import httpx
 import asyncio
 import logging
 import os
-import pickle
-import dill
 import pandas as pd
 import json
-from pydantic import BaseModel
-import mlflow
-import zipfile
 from typing import List, Dict, Any
 import time
 import traceback
+
 
 # Setup logging configuration
 logging.basicConfig()
@@ -28,6 +24,7 @@ MODEL_SERVICE_URL = os.getenv("MODEL_SERVICE_URL", "http://model_training:8002")
 
 # Dictionary to store loaded models in memory
 loaded_models = {}
+
 
 # Helper function to analyze heart disease risk based on model predictions
 # Takes prediction results, mean probability, and risk threshold as inputs

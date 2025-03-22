@@ -3,8 +3,6 @@ import os
 import pandas as pd
 import mlflow
 import mlflow.sklearn
-import shutil
-from mlflow.tracking import MlflowClient
 from unittest.mock import patch, MagicMock
 from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import load_iris

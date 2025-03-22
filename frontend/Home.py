@@ -1,5 +1,4 @@
 import streamlit as st
-import requests
 import os
 import random
 import string
@@ -19,7 +18,7 @@ st.markdown(
         border: 2px solid #ff4b4b !important;
         background-color: #fff0f0 !important;
     }
-    
+
     .center-title {
         text-align: center;
         margin-bottom: 2rem;
@@ -87,6 +86,7 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
+
 
 # --- ID generator ---
 def generate_unique_id(length=8):

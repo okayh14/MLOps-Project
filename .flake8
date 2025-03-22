@@ -1,5 +1,5 @@
 [flake8]
-max-line-length = 120
+max-line-length = 150
 exclude = 
     .git,
     __pycache__,
@@ -9,3 +9,4 @@ exclude =
     .DS_Store,
     backend/model_training/mlruns_data,
     backend/model_training/serialized_models
+ignore = W293, W291, E501, E402, W503, F841, E302

@@ -1,13 +1,11 @@
-import os
 import sys
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 # Patch the database module before importing the actual API
 # This ensures that the API uses the test database instead of the production one
-from test.mocks.database import Base, engine, SessionLocal
+from test.mocks.database import Base, engine
 
 sys.modules["backend.data_service.database"] = sys.modules["test.mocks.database"]
 # Import the FastAPI app and dependencies AFTER mocking the DB module

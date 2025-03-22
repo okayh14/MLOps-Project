@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 
+
 # Set the environment variable before all tests
 def pytest_configure(config):
     os.environ["DATABASE_URL"] = "sqlite:///test_db.sqlite"

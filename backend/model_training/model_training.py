@@ -1,4 +1,3 @@
-# Import necessary libraries
 import warnings
 import datetime
 import os
@@ -17,7 +16,7 @@ from sklearn.preprocessing import (
     RobustScaler,
 )
 from sklearn.feature_selection import SelectKBest, f_classif
-from sklearn.pipeline import FunctionTransformer, Pipeline
+from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedKFold, cross_validate
 from sklearn.metrics import make_scorer, fbeta_score
 from sklearn.base import BaseEstimator, TransformerMixin

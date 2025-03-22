@@ -1,11 +1,8 @@
-import os
-import json
 import pytest
 import tempfile
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch, AsyncMock
 import pandas as pd
-import shutil
 
 # Import the app, patch SERIALIZED_MODELS_DIR later
 from backend.model_training.app import app

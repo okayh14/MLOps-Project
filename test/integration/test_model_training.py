@@ -1,6 +1,5 @@
 import pytest
 import json
-import os
 from unittest.mock import patch
 from backend.model_training.model_training import main
 
