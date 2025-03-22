@@ -285,7 +285,7 @@ def build_form(errors=None, is_training_mode=False):
         
         # Income field - can be zero
         form_data["income"] = st.number_input(
-            "Income ($)", min_value=0, 
+            "Income per Year ($)", min_value=0, 
             key="income"
         )
     
@@ -334,13 +334,13 @@ def build_form(errors=None, is_training_mode=False):
     
     with col1:
         form_data["country"] = st.selectbox(
-            "Country", ["USA", "Germany", "France", "India", "Canada", "UK", "China", "Japan", "Brazil", "Other"], 
+            "Country", ["Germany", "Argentina", "Brazil", "Spain", "Nigeria", "United Kingdom", "Australia", "France", "Canada", "China", "New Zealand", "Japan", "Italy", "Colombia", 'Thailand', 'South Africa', 'Vietnam', 'USA', 'South Korea'], 
             key="country"
         )
     
     with col2:
         form_data["continent"] = st.selectbox(
-            "Continent", ["North America", "Europe", "Asia", "Africa", "South America", "Australia", "Antarctica"], 
+            "Continent", ["North America", "Europe", "Asia", "Africa", "South America", "Australia"], 
             key="continent"
         )
     
