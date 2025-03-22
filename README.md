@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/michellebinder/heart-disease-prediction/branch/testing/graph/badge.svg)](https://codecov.io/gh/michellebinder/heart-disease-prediction)
+
 ## Virtual Environment Setup
 
 ### macOS/Linux

@@ -3,6 +3,6 @@ venv/
 .env/
 *.pyc
 env/
-test_db.sqlite
 backend/model_training/mlruns_data
 backend/model_training/serialized_models
+.coverage

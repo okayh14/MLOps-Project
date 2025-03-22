@@ -2,3 +2,10 @@
 minversion="6.0"
 addopts="-vv -s --log-cli-level=INFO"
 testpaths = ["test"]
+filterwarnings = [
+  "ignore::UserWarning",
+  "ignore::DeprecationWarning",
+  "ignore::pydantic.PydanticDeprecatedSince20"
+]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"

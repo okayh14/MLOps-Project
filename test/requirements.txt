@@ -1,1 +1,39 @@
+# === Testing ===
 pytest
+pytest-asyncio
+pytest-cov
+
+# === API / Backend ===
+fastapi
+uvicorn
+starlette
+
+# === ML / Data ===
+pandas
+numpy
+scikit-learn
+xgboost
+matplotlib
+
+# === MLflow & Tracking ===
+mlflow
+sqlalchemy
+alembic
+
+# === Model I/O / Serialization ===
+pyyaml
+joblib
+dill
+cloudpickle
+
+# === Useful Addons ===
+requests
+httpx
+python-dateutil
+pydantic
+
+# === Optional, falls Flask genutzt wird irgendwo ===
+Flask
+
+# === CI/CD / Git Support (optional) ===
+GitPython
