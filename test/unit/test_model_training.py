@@ -97,41 +97,30 @@ def test_train_and_evaluate(mock_data, tmp_path):
     encoder_options = {
         "Label": ("label", FunctionTransformer(encode_labels, validate=False), ["sex"])
     }
-    scaler_options = {
-        "None": None
-    }
+    scaler_options = {"None": None}
     forbidden_combos = []
     model_param_grid = {
-        "LogisticRegression":  [{"C": 0.01, "solver": "lbfgs"}],
-        "RandomForest": [{"n_estimators": 10, "max_depth": 3}]
+        "LogisticRegression": [{"C": 0.01, "solver": "lbfgs"}],
+        "RandomForest":      [{"n_estimators": 10, "max_depth": 3}]
     }
-    feat_select_options = {
-        "None": None
-    }
+    feat_select_options = {"None": None}
     scoring = {"accuracy": "accuracy"}
 
-    # Create mock run object and mock return values
-    mock_run = MagicMock()
-    mock_run.info.run_id = "test_run_id"
-    
-    with patch("mlflow.start_run", return_value=mock_run) as mock_start_run, \
-         patch("mlflow.log_param") as mock_log_param, \
-         patch("mlflow.log_metrics") as mock_log_metrics:
-        
-        results = train_and_evaluate(
-            X, y,
-            encoder_options,
-            scaler_options,
-            forbidden_combos,
-            model_param_grid,
-            feat_select_options,
-            scoring,
-            experiment_name="test_experiment",
-            n_jobs=1
-        )
+    # Keine Mocks hier – wir wollen echte Runs
+    results = train_and_evaluate(
+        X, y,
+        encoder_options,
+        scaler_options,
+        forbidden_combos,
+        model_param_grid,
+        feat_select_options,
+        scoring,
+        experiment_name="test_experiment",
+        n_jobs=1
+    )
 
     assert isinstance(results, pd.DataFrame)
-    assert len(results) >= 2  # 2 runs -> 1 per model
+    assert len(results) >= 2, f"Expected >=2 rows, got {len(results)}"
 
 def test_forbidden_combo_skipped(mock_data):
     """
