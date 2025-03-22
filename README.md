@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/okayh14/MLOps-Project/branch/main/graph/badge.svg)](https://codecov.io/gh/okayh14/MLOps-Project)
+
 ## Virtual Environment Setup
 
 ### macOS/Linux
