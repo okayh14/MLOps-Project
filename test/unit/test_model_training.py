@@ -88,7 +88,6 @@ def test_configure_models():
     assert isinstance(scoring, dict)
 
 def test_train_and_evaluate(mock_data):
-
     logging.getLogger("mlflow").setLevel(logging.ERROR)
 
     X = mock_data.drop(columns=["heart_attack_risk"])
@@ -110,7 +109,14 @@ def test_train_and_evaluate(mock_data):
     }
     scoring = {"accuracy": "accuracy"}
 
-    with patch("mlflow.start_run"), patch("mlflow.log_param"), patch("mlflow.log_metrics"):
+    # Create mock run object and mock return values
+    mock_run = MagicMock()
+    mock_run.info.run_id = "test_run_id"
+    
+    with patch("mlflow.start_run", return_value=mock_run) as mock_start_run, \
+         patch("mlflow.log_param") as mock_log_param, \
+         patch("mlflow.log_metrics") as mock_log_metrics:
+        
         results = train_and_evaluate(
             X, y,
             encoder_options,

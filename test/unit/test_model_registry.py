@@ -49,23 +49,28 @@ async def test_register_top_models_success():
         mock_register.assert_called_once()
 
 
+# For the first failing test:
 async def test_serialize_and_compress_models_real(tmp_path):
     """
     Train and register a real model, then test whether it gets serialized correctly to disk.
     """
     mlflow.set_tracking_uri(f"file://{tmp_path}/mlruns")
-
+    
+    # Create an experiment first
+    experiment_name = "test-experiment"
+    experiment_id = mlflow.create_experiment(experiment_name)
+    
     # Train a real model using sklearn
     iris = load_iris()
     X, y = iris.data, iris.target
     model = LogisticRegression(max_iter=1000)
     model.fit(X, y)
-
+    
     # Log the model to MLflow inside a run
-    with mlflow.start_run() as run:
+    with mlflow.start_run(experiment_id=experiment_id) as run:
         mlflow.sklearn.log_model(model, artifact_path="model")
         run_id = run.info.run_id
-
+    
     # Register the model in the model registry
     model_name = "DummyTestModel"
     try:
@@ -75,12 +80,12 @@ async def test_serialize_and_compress_models_real(tmp_path):
         )
     except mlflow.exceptions.MlflowException:
         pass  # Ignore if it already exists
-
+    
     # Create target directory and serialize models
     target_dir = tmp_path / "serialized"
     os.makedirs(target_dir, exist_ok=True)
     await serialize_and_compress_models(str(target_dir))
-
+    
     # Check if any .pkl files were created
     files = list(target_dir.glob("*.pkl"))
     assert len(files) > 0
