@@ -6,13 +6,13 @@ import os
 import pandas as pd
 from mlflow.tracking import MlflowClient
 import dill
-from model_registry import (
+from .model_registry import (
     register_top_models,
     serialize_and_compress_models,
     clean_model_registry_and_folder,
 )
-from model_training import main
-from inference import prepare_and_predict
+from .model_training import main
+from .inference import prepare_and_predict
 import joblib
 import httpx
 
