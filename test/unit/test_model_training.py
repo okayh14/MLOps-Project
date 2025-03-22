@@ -87,7 +87,8 @@ def test_configure_models():
     assert isinstance(feat_select_options, dict)
     assert isinstance(scoring, dict)
 
-def test_train_and_evaluate(mock_data):
+def test_train_and_evaluate(mock_data, tmp_path):
+    mlflow.set_tracking_uri(f"file://{tmp_path}/mlruns")
     logging.getLogger("mlflow").setLevel(logging.ERROR)
 
     X = mock_data.drop(columns=["heart_attack_risk"])

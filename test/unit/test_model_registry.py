@@ -4,6 +4,7 @@ import pandas as pd
 import mlflow
 import mlflow.sklearn
 import shutil
+from mlflow.tracking import MlflowClient
 from unittest.mock import patch, MagicMock
 from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import load_iris
@@ -49,46 +50,55 @@ async def test_register_top_models_success():
         mock_register.assert_called_once()
 
 
-# For the first failing test:
+@pytest.mark.asyncio
 async def test_serialize_and_compress_models_real(tmp_path):
-    """
-    Train and register a real model, then test whether it gets serialized correctly to disk.
-    """
+    # 1) MLflow auf tmp_path "umleiten"
     mlflow.set_tracking_uri(f"file://{tmp_path}/mlruns")
-    
-    # Create an experiment first
+
+    # 2) Experiment anlegen
     experiment_name = "test-experiment"
     experiment_id = mlflow.create_experiment(experiment_name)
-    
-    # Train a real model using sklearn
+
+    # 3) Echtes Modell trainieren
     iris = load_iris()
     X, y = iris.data, iris.target
     model = LogisticRegression(max_iter=1000)
     model.fit(X, y)
-    
-    # Log the model to MLflow inside a run
+
+    # 4) Modell loggen
     with mlflow.start_run(experiment_id=experiment_id) as run:
         mlflow.sklearn.log_model(model, artifact_path="model")
         run_id = run.info.run_id
-    
-    # Register the model in the model registry
+
+    # 5) Modell registrieren
     model_name = "DummyTestModel"
+    model_version = None
     try:
-        mlflow.register_model(
+        res = mlflow.register_model(
             model_uri=f"runs:/{run_id}/model",
             name=model_name,
         )
+        model_version = res.version
     except mlflow.exceptions.MlflowException:
-        pass  # Ignore if it already exists
-    
-    # Create target directory and serialize models
+        pass  # Falls schon vorhanden, ignorieren wir den Fehler
+
+    # 6) Modell in "Staging" überführen (wichtig, falls die Serialisierung nur diese Stage nimmt)
+    if model_version:
+        client = MlflowClient()
+        client.transition_model_version_stage(
+            name=model_name,
+            version=model_version,
+            stage="Staging"
+        )
+
+    # 7) Modelle serialisieren
     target_dir = tmp_path / "serialized"
     os.makedirs(target_dir, exist_ok=True)
     await serialize_and_compress_models(str(target_dir))
-    
-    # Check if any .pkl files were created
+
+    # 8) Check, ob wirklich .pkl-Dateien da sind
     files = list(target_dir.glob("*.pkl"))
-    assert len(files) > 0
+    assert len(files) > 0, "No .pkl-files found!"
 
 
 async def test_clean_model_registry_and_folder(tmp_path):
