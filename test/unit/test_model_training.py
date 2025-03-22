@@ -54,29 +54,35 @@ def mock_data():
 
 def test_setup_experiment():
     """
-    Test that a new MLflow experiment is created successfully.
+    Verifies that a new MLflow experiment is created and returns a valid name.
     """
     with patch("mlflow.set_experiment") as mock_set_experiment:
         experiment_name = setup_experiment()
         assert "heart_attack_experiment_" in experiment_name
         mock_set_experiment.assert_called_once()
 
+
 def test_encode_labels(mock_data):
     """
-    Test that categorical columns are correctly encoded using LabelEncoder.
+    Tests that LabelEncoder is correctly applied to categorical columns.
     """
-    df_encoded = encode_labels(mock_data[["sex"]])  # Only test categorical column
+    df_encoded = encode_labels(mock_data[["sex"]]) 
     assert isinstance(df_encoded, pd.DataFrame)
-    assert df_encoded["sex"].nunique() == 2  # Expect two unique label-encoded values
+    assert df_encoded["sex"].nunique() == 2  
+
 
 def test_encode_labels_list_input():
+    """
+    Tests label encoding when input is a list instead of a DataFrame.
+    """
     result = encode_labels(["Male", "Female", "Male"])
     assert isinstance(result, pd.Series)
     assert set(result.unique()) <= {0, 1}
 
+
 def test_configure_models():
     """
-    Test that configure_models returns properly structured configurations.
+    Tests that model configuration options return dictionaries as expected.
     """
     cat_cols = ["sex"]
     encoder_options, scaler_options, forbidden_combos, model_param_grid, feat_select_options, scoring = configure_models(cat_cols)
@@ -87,7 +93,11 @@ def test_configure_models():
     assert isinstance(feat_select_options, dict)
     assert isinstance(scoring, dict)
 
+
 def test_train_and_evaluate(mock_data):
+    """
+    Runs a minimal train_and_evaluate test with two model configs and no scaling.
+    """
 
     logging.getLogger("mlflow").setLevel(logging.ERROR)
 
@@ -124,11 +134,12 @@ def test_train_and_evaluate(mock_data):
         )
 
     assert isinstance(results, pd.DataFrame)
-    assert len(results) >= 2  # 2 runs -> 1 per model
+    assert len(results) >= 2  
+
 
 def test_forbidden_combo_skipped(mock_data):
     """
-    Test that forbidden combinations of encoder and scaler are skipped.
+    Verifies that a forbidden combination of encoder and scaler is skipped.
     """
     X = mock_data.drop(columns=["heart_attack_risk"])
     y = mock_data["heart_attack_risk"]
@@ -159,12 +170,13 @@ def test_forbidden_combo_skipped(mock_data):
             n_jobs=1
         )
 
-    # Sollte keine Läufe geben, weil die einzige Kombi verboten ist
+    # Should skip the forbidden combination, resulting in no model runs
     assert results.empty
+
 
 def test_invalid_model_name_handling(mock_data):
     """
-    Test that an unknown model name is gracefully handled and skipped.
+    Ensures that unknown model names are handled gracefully and skipped.
     """
     X = mock_data.drop(columns=["heart_attack_risk"])
     y = mock_data["heart_attack_risk"]
@@ -193,5 +205,5 @@ def test_invalid_model_name_handling(mock_data):
             n_jobs=1
         )
 
-    # Sollte leer sein, da das Model nicht unterstützt wird
+    # Should be empty because the model is not supported
     assert results.empty

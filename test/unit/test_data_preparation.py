@@ -8,9 +8,6 @@ from backend.data_service.data_preparation import (
     split_blood_pressure,
 )
 
-# --------------------------------------
-# Test remove_null_values
-# --------------------------------------
 
 def test_remove_null_values_removes_rows_with_nan():
     """
@@ -25,10 +22,6 @@ def test_remove_null_values_removes_rows_with_nan():
     assert result.shape[0] == 1
 
 
-# --------------------------------------
-# Test remove_duplicates
-# --------------------------------------
-
 def test_remove_duplicates_removes_exact_copies():
     """
     Test that duplicate rows are removed.
@@ -42,10 +35,6 @@ def test_remove_duplicates_removes_exact_copies():
     assert not result.duplicated().any()
 
 
-# --------------------------------------
-# Test standardize_column_names
-# --------------------------------------
-
 def test_standardize_column_names_lowercase_and_underscores():
     """
     Test that column names are converted to lowercase and spaces to underscores.
@@ -54,10 +43,6 @@ def test_standardize_column_names_lowercase_and_underscores():
     result = standardize_column_names(df)
     assert list(result.columns) == ["column_one", "column_two"]
 
-
-# --------------------------------------
-# Test remove_patient_id
-# --------------------------------------
 
 def test_remove_patient_id_removes_column_if_exists():
     """
@@ -71,6 +56,7 @@ def test_remove_patient_id_removes_column_if_exists():
     assert "patient_id" not in result.columns
     assert "age" in result.columns
 
+
 def test_remove_patient_id_ignores_if_missing():
     """
     Test that function does not raise error if 'patient_id' is not in columns.
@@ -79,10 +65,6 @@ def test_remove_patient_id_ignores_if_missing():
     result = remove_patient_id(df)
     assert "age" in result.columns
 
-
-# --------------------------------------
-# Test split_blood_pressure
-# --------------------------------------
 
 def test_split_blood_pressure_creates_two_numeric_columns():
     """
@@ -98,6 +80,7 @@ def test_split_blood_pressure_creates_two_numeric_columns():
     assert result["diastolic_blood_pressure"].tolist() == [80, 90]
     assert "blood_pressure" not in result.columns
 
+
 def test_split_blood_pressure_handles_invalid_format():
     """
     Test that invalid blood pressure formats do not create new columns.
@@ -110,6 +93,7 @@ def test_split_blood_pressure_handles_invalid_format():
     # Columns should not be created because split failed
     assert "systolic_blood_pressure" not in result.columns
     assert "diastolic_blood_pressure" not in result.columns
+
 
 def test_split_blood_pressure_ignores_if_column_missing():
     """

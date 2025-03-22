@@ -20,7 +20,7 @@ pytestmark = pytest.mark.asyncio
 
 async def test_register_top_models_empty_df():
     """
-    Test that no model is registered when the input DataFrame is empty.
+    Ensures that no model is registered when the input DataFrame is empty.
     """
     with patch("mlflow.register_model") as mock_register:
         await register_top_models(pd.DataFrame(), "test_exp")
@@ -29,7 +29,7 @@ async def test_register_top_models_empty_df():
 
 async def test_register_top_models_success():
     """
-    Test that a valid model entry gets successfully registered.
+    Tests successful registration of a valid model using a mock results DataFrame.
     """
     df = pd.DataFrame({
         "run_id": ["abc123"],
@@ -52,20 +52,18 @@ async def test_register_top_models_success():
 
 async def test_serialize_and_compress_models_real(tmp_path):
     """
-    Train and register a real model, then test whether it gets serialized correctly to disk.
+    Trains and registers a real model using sklearn and MLflow,
+    then verifies that the model is serialized to disk as a .pkl file.
     """
-    # Train a real model using sklearn
     iris = load_iris()
     X, y = iris.data, iris.target
     model = LogisticRegression(max_iter=1000)
     model.fit(X, y)
 
-    # Log the model to MLflow inside a run
     with mlflow.start_run() as run:
         mlflow.sklearn.log_model(model, artifact_path="model")
         run_id = run.info.run_id
 
-    # Register the model in the model registry
     model_name = "DummyTestModel"
     try:
         mlflow.register_model(
@@ -87,7 +85,7 @@ async def test_serialize_and_compress_models_real(tmp_path):
 
 async def test_clean_model_registry_and_folder(tmp_path):
     """
-    Test that the function deletes both registry models and local files in a given folder.
+    Tests that both registered models and serialized local files are deleted correctly.
     """
     # Create a dummy file to simulate existing serialized model
     file_path = tmp_path / "dummy.pkl"
