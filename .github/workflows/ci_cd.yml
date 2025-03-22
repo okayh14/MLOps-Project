@@ -51,9 +51,10 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
-          pip install -r frontend/requirements.txt || true  # Falls nicht nötig
-          pip install -r model_training/requirements.txt || true
+          pip install -r backend/data_service/requirements.txt
+          pip install -r backend/model_training/requirements.txt
+          pip install -r backend/Orchestrator/requirements.txt
+          pip install -r frontend/requirements.txt || true  
           pip install -r test/requirements.txt
           pip install pytest-cov
 
