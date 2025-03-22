@@ -17,27 +17,20 @@ client = TestClient(app)
 def test_model_dir():
     """Erstellt ein temporäres Verzeichnis für die Tests und patcht den Pfad in der app."""
     # Temporäres Verzeichnis für Tests erstellen
-    test_dir = "./test_serialized_models"
-    os.makedirs(test_dir, exist_ok=True)
-    
-    # Patch the constant in the app module
-    original_dir = None
-    
-    # Speichere den originalen Wert
-    import backend.model_training.app as app_module
-    original_dir = app_module.SERIALIZED_MODELS_DIR
-    
-    # Setze temporären Wert
-    app_module.SERIALIZED_MODELS_DIR = test_dir
-    
-    # Übergib das Verzeichnis an die Tests
-    yield test_dir
-    
-    # Stelle ursprünglichen Wert wieder her
-    app_module.SERIALIZED_MODELS_DIR = original_dir
-    
-    if os.path.exists(test_dir):
-        shutil.rmtree(test_dir, ignore_errors=True)
+    with tempfile.TemporaryDirectory() as test_dir:
+        # Patch the constant in the app module
+        import backend.model_training.app as app_module
+        original_dir = app_module.SERIALIZED_MODELS_DIR
+        
+        # Setze temporären Wert
+        app_module.SERIALIZED_MODELS_DIR = test_dir
+        
+        # Übergib das Verzeichnis an die Tests
+        yield test_dir
+        
+        # Stelle ursprünglichen Wert wieder her
+        app_module.SERIALIZED_MODELS_DIR = original_dir
+        # Cleanup happens automatically when exiting the context manager
 
 @pytest.fixture
 def sample_training_data():
