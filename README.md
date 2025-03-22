@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/okayh14/MLOps-Project/branch/main/graph/badge.svg)](https://codecov.io/gh/okayh14/MLOps-Project)
+[![codecov](https://codecov.io/gh/michellebinder/heart-disease-prediction/branch/testing/graph/badge.svg)](https://codecov.io/gh/michellebinder/heart-disease-prediction)
 
 ## Virtual Environment Setup
 
