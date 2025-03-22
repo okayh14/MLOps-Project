@@ -9,11 +9,11 @@ async def test_main_integration(tmp_path):
     """
     Integration test that runs the entire training process (train_and_evaluate) 
     and model registration by calling the `main()` function.
-    
-    This test ensures that the pipeline is functioning end-to-end, even with mocked 
+
+    This test ensures that the pipeline functions end-to-end, even with mocked 
     dependencies, by validating that the result returned by the `main()` function 
     contains the expected status and results.
-    
+
     Expected Behavior:
     - The function should successfully execute the training pipeline.
     - The `main()` function should return a status of 'success'.
@@ -41,8 +41,8 @@ async def test_main_integration(tmp_path):
         # Call the main function (which covers all pipeline steps)
         result = await main(input_data)
 
-    # Verify the results
+    # Validate returned result
     assert result["status"] == "success"
     assert "experiment_name" in result
-    assert "results_df" in result  # Checken, ob ein DataFrame zurückgegeben wurde
-    assert len(result["results_df"]) > 0  # Sicherstellen, dass es Ergebnisse gibt
+    assert "results_df" in result
+    assert len(result["results_df"]) > 0

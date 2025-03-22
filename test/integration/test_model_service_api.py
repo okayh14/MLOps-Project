@@ -6,34 +6,37 @@ from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock, AsyncMock
 import pandas as pd
 import shutil
-
-# Importiere die app, aber patche SERIALIZED_MODELS_DIR später
+# Import the app, patch SERIALIZED_MODELS_DIR later
 from backend.model_training.app import app
 
-# TestClient für FastAPI
+# FastAPI test client
 client = TestClient(app)
 
 @pytest.fixture(scope="module")
 def test_model_dir():
-    """Erstellt ein temporäres Verzeichnis für die Tests und patcht den Pfad in der app."""
-    # Temporäres Verzeichnis für Tests erstellen
+    """
+    Creates a temporary directory for testing and patches the app's model directory.
+    """
     with tempfile.TemporaryDirectory() as test_dir:
         # Patch the constant in the app module
         import backend.model_training.app as app_module
         original_dir = app_module.SERIALIZED_MODELS_DIR
         
-        # Setze temporären Wert
+        # Set temporary directory for model serialization
         app_module.SERIALIZED_MODELS_DIR = test_dir
         
         # Übergib das Verzeichnis an die Tests
         yield test_dir
         
-        # Stelle ursprünglichen Wert wieder her
+        # Restore original directory path
         app_module.SERIALIZED_MODELS_DIR = original_dir
-        # Cleanup happens automatically when exiting the context manager
+        # Cleanup is handled automatically
 
 @pytest.fixture
 def sample_training_data():
+    """
+    Provides example input data for training endpoint tests.
+    """
     return [
         {"feature1": 1.0, "feature2": 2.0, "label": 0},
         {"feature1": 3.0, "feature2": 4.0, "label": 1},
@@ -42,6 +45,9 @@ def sample_training_data():
 
 @pytest.fixture
 def sample_inference_data():
+    """
+    Provides example input data for inference endpoint tests.
+    """
     return [
         {"feature1": 1.0, "feature2": 2.0},
         {"feature1": 3.0, "feature2": 4.0},
@@ -49,15 +55,19 @@ def sample_inference_data():
 
 @pytest.fixture
 def sample_inference_results():
+    """
+    Returns a sample prediction result DataFrame.
+    """
     return pd.DataFrame({
         "Id": [1, 2],
         "Probability_At_Risk": [0.2, 0.8],
         "Prediction": [0, 1]
     })
 
-# Test für den /check Endpunkt
 def test_check_registry_no_models(test_model_dir):
-    """Test für /check wenn keine Modelle verfügbar sind."""
+    """
+    Tests /check endpoint when no models are available.
+    """
     with patch("os.walk") as mock_walk:
         mock_walk.return_value = [(test_model_dir, [], [])]
         response = client.get("/check")
@@ -65,7 +75,9 @@ def test_check_registry_no_models(test_model_dir):
         assert response.json() == {"message": "No models available."}
 
 def test_check_registry_with_models(test_model_dir):
-    """Test für /check wenn Modelle verfügbar sind."""
+    """
+    Tests /check endpoint when models are available.
+    """
     with patch("os.walk") as mock_walk:
         mock_walk.return_value = [(test_model_dir, [], ["model1.pkl", "model2.pkl"])]
         response = client.get("/check")
@@ -73,23 +85,24 @@ def test_check_registry_with_models(test_model_dir):
         assert response.json() == {"message": "Models available."}
 
 def test_check_registry_exception(test_model_dir):
-    """Test für /check wenn eine Exception auftritt."""
+    """
+    Tests /check endpoint when an exception is raised.
+    """
     with patch("os.path.exists", side_effect=Exception("Test exception")):
         response = client.get("/check")
         assert response.status_code == 500
         assert "Test exception" in response.json()["detail"]
 
-# Tests für den /train Endpunkt
 @pytest.mark.asyncio
 async def test_train_success(test_model_dir, sample_training_data):
-    """Test für erfolgreiche Modelltraining."""
-    # Mocks für die asynchronen Funktionen
+    """
+    Tests successful training via /train endpoint.
+    """
     with patch("backend.model_training.app.clean_model_registry_and_folder", new_callable=AsyncMock) as mock_clean, \
          patch("backend.model_training.app.main", new_callable=AsyncMock) as mock_main, \
          patch("backend.model_training.app.register_top_models", new_callable=AsyncMock) as mock_register, \
          patch("backend.model_training.app.serialize_and_compress_models", new_callable=AsyncMock) as mock_serialize:
         
-        # Mock für Trainingsergebnisse
         mock_main.return_value = {
             "results_df": pd.DataFrame({"model": ["model1"], "metric": [0.9]}),
             "experiment_name": "test_experiment"
@@ -97,7 +110,6 @@ async def test_train_success(test_model_dir, sample_training_data):
         
         response = client.post("/train", json=sample_training_data)
         
-        # Überprüfung, ob alle Funktionen aufgerufen wurden
         mock_clean.assert_called_once()
         mock_main.assert_called_once_with(sample_training_data)
         mock_register.assert_called_once()
@@ -108,7 +120,9 @@ async def test_train_success(test_model_dir, sample_training_data):
 
 @pytest.mark.asyncio
 async def test_train_exception(test_model_dir):
-    """Test für Fehler beim Modelltraining."""
+    """
+    Tests training failure due to an exception in /train endpoint.
+    """
     with patch("backend.model_training.app.clean_model_registry_and_folder", new_callable=AsyncMock) as mock_clean:
         mock_clean.side_effect = Exception("Training error")
         
@@ -120,7 +134,9 @@ async def test_train_exception(test_model_dir):
 # Tests für den /inference Endpunkt
 @pytest.mark.asyncio
 async def test_inference_success(test_model_dir, sample_inference_data, sample_inference_results):
-    """Test für erfolgreiche Inferenz."""
+    """
+    Tests successful inference via /inference endpoint.
+    """
     with patch("os.listdir") as mock_listdir, \
          patch("backend.model_training.app.prepare_and_predict") as mock_predict:
         
@@ -140,7 +156,9 @@ async def test_inference_success(test_model_dir, sample_inference_data, sample_i
 
 @pytest.mark.asyncio
 async def test_inference_no_models(test_model_dir, sample_inference_data):
-    """Test für Inferenz wenn keine Modelle vorhanden sind."""
+    """
+    Tests /inference when no models are available.
+    """
     with patch("os.listdir") as mock_listdir, \
          patch("backend.model_training.app.serialize_and_compress_models", new_callable=AsyncMock) as mock_serialize, \
          patch("backend.model_training.app.prepare_and_predict") as mock_predict:
@@ -156,7 +174,9 @@ async def test_inference_no_models(test_model_dir, sample_inference_data):
 
 @pytest.mark.asyncio
 async def test_inference_exception(test_model_dir, sample_inference_data):
-    """Test für Fehler bei der Inferenz."""
+    """
+    Tests /inference when an exception occurs during processing.
+    """
     with patch("os.listdir") as mock_listdir:
         mock_listdir.side_effect = Exception("Inference error")
         

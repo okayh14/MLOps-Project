@@ -81,9 +81,6 @@ def sample_patient():
         "heart_attack_risk": False,
     }
 
-# ----------------------------------------------
-# TEST: GET /data
-# ----------------------------------------------
 def test_get_prepared_data_empty_db(client):
     """
     Test GET /data when the database is empty.
@@ -108,9 +105,6 @@ def test_get_prepared_data_with_data(client, test_db, sample_patient):
     assert data[0]["age"] == 67
     assert "systolic_blood_pressure" in data[0]
 
-# ----------------------------------------------
-# TEST: POST /clean
-# ----------------------------------------------
 def test_clean_data(client, sample_patient):
     """
     Test POST /clean with raw patient data.
@@ -122,9 +116,6 @@ def test_clean_data(client, sample_patient):
     assert len(data) == 1
     assert "systolic_blood_pressure" in data[0]
 
-# ----------------------------------------------
-# TEST: POST /patients
-# ----------------------------------------------
 def test_create_patient(client, sample_patient):
     """
     Test POST /patients to create a new patient record in the database.
