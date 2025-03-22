@@ -7,6 +7,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import load_iris
 from backend.model_training.inference import prepare_and_predict
 
+
 def create_dummy_model_and_features(tmp_path):
     """
     Creates a trained model and saves it along with model_features.json.
@@ -64,7 +65,10 @@ def test_prepare_and_predict_missing_columns(tmp_path):
     input_features, model_dir = create_dummy_model_and_features(tmp_path)
 
     # Remove one required column from the input
-    incomplete_input = [{k: v for k, v in sample.items() if k != "feature_0"} for sample in input_features]
+    incomplete_input = [
+        {k: v for k, v in sample.items() if k != "feature_0"}
+        for sample in input_features
+    ]
 
     with pytest.raises(ValueError, match="Missing columns in input"):
         prepare_and_predict(incomplete_input, model_dir)
@@ -83,4 +87,3 @@ def test_prepare_and_predict_no_models(tmp_path):
     # Expect ValueError because there are no models to concatenate
     with pytest.raises(ValueError, match="No objects to concatenate"):
         prepare_and_predict(input_data, str(tmp_path))
-

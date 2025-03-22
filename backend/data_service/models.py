@@ -1,5 +1,7 @@
 from sqlalchemy import Column, Integer, Boolean, String, Float
-from backend.data_service.database import Base  # Import the declarative base from the database module
+from backend.data_service.database import (
+    Base,
+)  # Import the declarative base from the database module
 
 
 class PatientData(Base):
@@ -7,7 +9,7 @@ class PatientData(Base):
     SQLAlchemy model that defines the structure of the 'heart_risk' table.
     Each instance of this class represents a single patient data entry.
     """
-    
+
     __tablename__ = "heart_risk"  # Name of the table in the database
 
     # --- Patient Identifier ---
@@ -15,7 +17,7 @@ class PatientData(Base):
 
     # --- Basic Demographics ---
     age = Column(Integer, nullable=False)  # Age in years
-    sex = Column(String, nullable=False)   # "Male" or "Female"
+    sex = Column(String, nullable=False)  # "Male" or "Female"
 
     # --- Health Metrics ---
     cholesterol = Column(Integer, nullable=False)  # Cholesterol level (mg/dL)
@@ -31,7 +33,9 @@ class PatientData(Base):
     obesity = Column(Boolean, nullable=False)  # Obesity status
     alcohol_consumption = Column(Boolean, nullable=False)  # Alcohol use
     exercise_hours_per_week = Column(Float, nullable=False)  # Weekly physical activity
-    physical_activity_days_per_week = Column(Integer, nullable=False)  # Active days/week
+    physical_activity_days_per_week = Column(
+        Integer, nullable=False
+    )  # Active days/week
     sedentary_hours_per_day = Column(Float, nullable=False)  # Sedentary time (hrs/day)
     sleep_hours_per_day = Column(Integer, nullable=False)  # Sleep duration (hrs/day)
     diet = Column(String, nullable=False)  # "Balanced", "Average", or "Unhealthy"
@@ -43,7 +47,11 @@ class PatientData(Base):
     income = Column(Integer, nullable=False)  # Annual income (USD)
     country = Column(String, nullable=False)  # Patient's country
     continent = Column(String, nullable=False)  # Patient's continent
-    hemisphere = Column(String, nullable=False)  # "Northern Hemisphere" or "Southern Hemisphere"
+    hemisphere = Column(
+        String, nullable=False
+    )  # "Northern Hemisphere" or "Southern Hemisphere"
 
     # --- Target Variable ---
-    heart_attack_risk = Column(Boolean, nullable=False)  # Ground truth label for training
+    heart_attack_risk = Column(
+        Boolean, nullable=False
+    )  # Ground truth label for training

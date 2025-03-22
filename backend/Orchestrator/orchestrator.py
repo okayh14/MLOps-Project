@@ -63,6 +63,7 @@ async def assess_heart_disease_risk(result, mean_proba, threshold=0.5):
             f"risk prediction is {max_confidence:.2f} and the mean probability being {mean_proba:.2f}."
         )
 
+
 # Endpoint to retrieve dataset from the data service
 @app.get("/data")
 async def get_data():
@@ -78,6 +79,7 @@ async def get_data():
 
     return None
 
+
 # Endpoint to upload patient data to the data service
 @app.post("/upload")
 async def upload_data(data: dict):
@@ -89,7 +91,8 @@ async def upload_data(data: dict):
     except Exception as e:
         logger.error(f"An error occurred: {e}")
         raise HTTPException(status_code=400, detail=str(e))
-    
+
+
 # Combined endpoint that uploads data and triggers model retraining
 @app.post("/trigger_upload")
 async def upload_retrain(data: dict):
@@ -98,15 +101,16 @@ async def upload_retrain(data: dict):
         response_upload = await upload_data(data)
         response_training = await trigger_training()
         return {
-            'response_upload': response_upload.get('status'),
-            'response_training': response_training.get('message')
+            "response_upload": response_upload.get("status"),
+            "response_training": response_training.get("message"),
         }
     except Exception as e:
         logger.error(f"An error occurred: {e}")
-    
+
+
 # Endpoint to communicate with model service for training
 @app.post("/call_training")
-async def orchestrator_train_models(train_data: dict): 
+async def orchestrator_train_models(train_data: dict):
     try:
         # Extended timeout (16.7 hours) for potentially long training processes
         async with httpx.AsyncClient(timeout=60000.0) as client:
@@ -117,6 +121,7 @@ async def orchestrator_train_models(train_data: dict):
         logger.error(f"Error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
+
 # Endpoint to request predictions from the model service
 @app.post("/call_inference")
 async def call_prediction(features: List[Dict[str, Any]]):
@@ -126,7 +131,7 @@ async def call_prediction(features: List[Dict[str, Any]]):
             response = await client.post(
                 MODEL_SERVICE_URL + "/inference", json=features
             )
-            response.raise_for_status()  
+            response.raise_for_status()
             response_data = response.json()
 
         logger.info(f"Inference Response: {response_data}")
@@ -134,8 +139,7 @@ async def call_prediction(features: List[Dict[str, Any]]):
         # Validate response structure
         if "final_results" not in response_data or "mean_proba" not in response_data:
             raise HTTPException(
-                status_code=400,
-                detail=f"Inference response malformed: {response_data}"
+                status_code=400, detail=f"Inference response malformed: {response_data}"
             )
 
         # Generate human-readable risk assessment
@@ -153,6 +157,7 @@ async def call_prediction(features: List[Dict[str, Any]]):
         logger.error(f"An error occurred in call_prediction: {e}")
         raise HTTPException(status_code=400, detail=f"Prediction error: {str(e)}")
 
+
 # Internal helper function for model training process
 async def _trigger_training_logic():
     """Internal function with the training trigger logic"""
@@ -162,8 +167,9 @@ async def _trigger_training_logic():
     resp = await orchestrator_train_models(data)
     return {"message": "Training successful.", "info": resp}
 
+
 # Public endpoint to trigger model training
-@app.post("/start_training") 
+@app.post("/start_training")
 async def trigger_training():
     """API endpoint for training"""
     try:
@@ -172,6 +178,7 @@ async def trigger_training():
     except Exception as e:
         logger.error(f"Error in trigger_training: {e}")
         raise HTTPException(status_code=400, detail=str(e))
+
 
 # Endpoint that handles feature preprocessing and prediction
 @app.post("/start_inference")
@@ -182,7 +189,7 @@ async def start_prediction(features: List[Dict[str, Any]]):
             response = await client.post(
                 DATA_SERVICE_URL + "/clean",
                 json=features,
-                params={"drop_target": True}  # Remove target variable for prediction
+                params={"drop_target": True},  # Remove target variable for prediction
             )
             response.raise_for_status()
             clean_features = response.json()
@@ -192,6 +199,7 @@ async def start_prediction(features: List[Dict[str, Any]]):
         return prediction_response
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Prediction error: {str(e)}")
+
 
 # Application startup event handler
 @app.on_event("startup")
@@ -209,7 +217,7 @@ async def startup_event():
         try:
             async with httpx.AsyncClient(timeout=600.0) as client:
                 resp = await client.get(f"{MODEL_SERVICE_URL}/check")
-                
+
                 try:
                     data = resp.json()
                     if data.get("message") == "No models available.":
@@ -219,7 +227,9 @@ async def startup_event():
                         logger.info("Models exist. No training needed.")
                     break
                 except json.JSONDecodeError:
-                    logger.error(f"JSON decode error in startup_event. Raw text: {await resp.aread()}")
+                    logger.error(
+                        f"JSON decode error in startup_event. Raw text: {await resp.aread()}"
+                    )
                     break
 
         except Exception as e:

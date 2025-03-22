@@ -11,17 +11,19 @@ from Home import validate_form, build_form, check_empty_fields, generate_unique_
 ORCHESTRATOR_URL = os.getenv("ORCHESTRATOR_URL", "http://orchestrator:8003")
 
 # --- PAGE SETUP ---
-st.markdown("<h1 class='center-title'>Add Data & Retrain Model</h1>", unsafe_allow_html=True)
+st.markdown(
+    "<h1 class='center-title'>Add Data & Retrain Model</h1>", unsafe_allow_html=True
+)
 
 # --- RESET training results on page load ---
 st.session_state.training_results = None
 
 # --- Initialize session state ---
-if 'form_data' not in st.session_state:
+if "form_data" not in st.session_state:
     st.session_state.form_data = {}
-if 'errors' not in st.session_state:
+if "errors" not in st.session_state:
     st.session_state.errors = {}
-if 'error_displayed' not in st.session_state:
+if "error_displayed" not in st.session_state:
     st.session_state.error_displayed = False
 
 # --- Live validation of critical fields on page load ---
@@ -37,7 +39,7 @@ with st.form("training_form", clear_on_submit=False):
     with col2:
         st.markdown('<div class="button-container">', unsafe_allow_html=True)
         submitted = st.form_submit_button("Submit")
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
 # --- HANDLE FORM SUBMISSION ---
 if submitted:
@@ -58,7 +60,9 @@ if submitted:
         st.session_state.error_displayed = False
 
         # Convert 'True'/'False' string to boolean for risk label
-        if "heart_attack_risk" in form_data and isinstance(form_data["heart_attack_risk"], str):
+        if "heart_attack_risk" in form_data and isinstance(
+            form_data["heart_attack_risk"], str
+        ):
             form_data["heart_attack_risk"] = form_data["heart_attack_risk"] == "True"
 
         # --- Inform user about retraining impact ---
@@ -72,9 +76,7 @@ if submitted:
             try:
                 # Send the training data to the orchestrator
                 response = requests.post(
-                    f"{ORCHESTRATOR_URL}/trigger_upload",
-                    json=form_data,
-                    timeout=None
+                    f"{ORCHESTRATOR_URL}/trigger_upload", json=form_data, timeout=None
                 )
                 response.raise_for_status()
 
@@ -83,7 +85,9 @@ if submitted:
                 st.session_state.form_data = form_data
 
                 # Notify user of success
-                st.success("✅ Models have been successfully updated. You can now perform new predictions.")
+                st.success(
+                    "✅ Models have been successfully updated. You can now perform new predictions."
+                )
 
             except Exception as e:
                 st.error(f"❌ Error during training: {str(e)}")
@@ -100,4 +104,4 @@ if st.session_state.training_results:
     else:
         st.write(result_data)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)

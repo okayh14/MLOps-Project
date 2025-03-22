@@ -31,21 +31,23 @@ async def test_register_top_models_success():
     """
     Tests successful registration of a valid model using a mock results DataFrame.
     """
-    df = pd.DataFrame({
-        "run_id": ["abc123"],
-        "model_name": ["LogisticRegression"],
-        "encoder": ["Label"],
-        "scaler": ["None"],
-        "feat_selection": ["None"],
-        "fbeta_1_5": [0.9],
-        "C": [0.1],
-        "max_iter": [100],
-        "solver": ["lbfgs"],
-    })
+    df = pd.DataFrame(
+        {
+            "run_id": ["abc123"],
+            "model_name": ["LogisticRegression"],
+            "encoder": ["Label"],
+            "scaler": ["None"],
+            "feat_selection": ["None"],
+            "fbeta_1_5": [0.9],
+            "C": [0.1],
+            "max_iter": [100],
+            "solver": ["lbfgs"],
+        }
+    )
 
-    with patch("mlflow.register_model") as mock_register, \
-         patch("mlflow.tracking.MlflowClient.transition_model_version_stage"), \
-         patch("mlflow.tracking.MlflowClient.update_model_version"):
+    with patch("mlflow.register_model") as mock_register, patch(
+        "mlflow.tracking.MlflowClient.transition_model_version_stage"
+    ), patch("mlflow.tracking.MlflowClient.update_model_version"):
         await register_top_models(df, "test_exp")
         mock_register.assert_called_once()
 
@@ -67,8 +69,7 @@ async def test_serialize_and_compress_models_real(tmp_path):
     model_name = "DummyTestModel"
     try:
         mlflow.register_model(
-            model_uri=f"runs:/{run_id}/model",
-            name=model_name,
+            model_uri=f"runs:/{run_id}/model", name=model_name,
         )
     except mlflow.exceptions.MlflowException:
         pass  # Ignore if it already exists
@@ -101,11 +102,18 @@ async def test_clean_model_registry_and_folder(tmp_path):
     dummy_model.latest_versions = [dummy_version]
 
     # Patch all client interactions
-    with patch("mlflow.tracking.MlflowClient.search_registered_models", return_value=[dummy_model]), \
-         patch("mlflow.tracking.MlflowClient.get_latest_versions", return_value=[dummy_version]), \
-         patch("mlflow.tracking.MlflowClient.transition_model_version_stage"), \
-         patch("mlflow.tracking.MlflowClient.delete_model_version"), \
-         patch("mlflow.tracking.MlflowClient.delete_registered_model"):
+    with patch(
+        "mlflow.tracking.MlflowClient.search_registered_models",
+        return_value=[dummy_model],
+    ), patch(
+        "mlflow.tracking.MlflowClient.get_latest_versions", return_value=[dummy_version]
+    ), patch(
+        "mlflow.tracking.MlflowClient.transition_model_version_stage"
+    ), patch(
+        "mlflow.tracking.MlflowClient.delete_model_version"
+    ), patch(
+        "mlflow.tracking.MlflowClient.delete_registered_model"
+    ):
         models_deleted, files_deleted = await clean_model_registry_and_folder(tmp_path)
 
         # Verify both model and file were deleted

@@ -5,6 +5,7 @@ from sqlalchemy import select
 from database import SessionLocal, engine, Base
 from models import PatientData  # Import the PatientData ORM model
 
+
 def initialize_database():
     """
     Initializes the database.
@@ -27,6 +28,7 @@ def initialize_database():
 
     session.close()
 
+
 def load_initial_data(session: Session):
     """
     Loads initial patient data from a local CSV file into the database.
@@ -42,7 +44,7 @@ def load_initial_data(session: Session):
         raise FileNotFoundError(f"CSV file not found: {csv_file}")
 
     print(f"CSV file found: {csv_file}")
-    
+
     # Read the CSV into a pandas DataFrame
     df = pd.read_csv(csv_file)
 
@@ -86,6 +88,7 @@ def load_initial_data(session: Session):
     session.bulk_save_objects(patients)
     session.commit()
     print(f"{len(patients)} records were successfully inserted into the database.")
+
 
 # Run initialization if executed as a script
 if __name__ == "__main__":

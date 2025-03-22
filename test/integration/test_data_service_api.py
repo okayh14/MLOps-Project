@@ -4,16 +4,19 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 # Patch the database module before importing the actual API
 # This ensures that the API uses the test database instead of the production one
 from test.mocks.database import Base, engine, SessionLocal
-sys.modules['backend.data_service.database'] = sys.modules['test.mocks.database']
+
+sys.modules["backend.data_service.database"] = sys.modules["test.mocks.database"]
 # Import the FastAPI app and dependencies AFTER mocking the DB module
 from backend.data_service.api import app, get_db
 from backend.data_service.models import PatientData
 
 # Local session for testing
 TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+
 
 @pytest.fixture(scope="function")
 def test_db():
@@ -29,12 +32,14 @@ def test_db():
         db.close()
         Base.metadata.drop_all(bind=engine)
 
+
 @pytest.fixture(scope="function")
 def client(test_db):
     """
     Provides a FastAPI TestClient instance with the test database dependency injected.
     Ensures that all API routes use the mocked test database during testing.
     """
+
     def override_get_db():
         try:
             yield test_db
@@ -45,6 +50,7 @@ def client(test_db):
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+
 
 @pytest.fixture
 def sample_patient():
@@ -81,6 +87,7 @@ def sample_patient():
         "heart_attack_risk": False,
     }
 
+
 def test_get_prepared_data_empty_db(client):
     """
     Test GET /data when the database is empty.
@@ -89,6 +96,7 @@ def test_get_prepared_data_empty_db(client):
     response = client.get("/data")
     assert response.status_code == 404
     assert response.json()["detail"] == "No data available"
+
 
 def test_get_prepared_data_with_data(client, test_db, sample_patient):
     """
@@ -105,6 +113,7 @@ def test_get_prepared_data_with_data(client, test_db, sample_patient):
     assert data[0]["age"] == 67
     assert "systolic_blood_pressure" in data[0]
 
+
 def test_clean_data(client, sample_patient):
     """
     Test POST /clean with raw patient data.
@@ -115,6 +124,7 @@ def test_clean_data(client, sample_patient):
     data = response.json()
     assert len(data) == 1
     assert "systolic_blood_pressure" in data[0]
+
 
 def test_create_patient(client, sample_patient):
     """
@@ -136,4 +146,3 @@ def test_create_patient(client, sample_patient):
         and p["continent"] == sample_patient["continent"]
         for p in data
     )
-    

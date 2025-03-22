@@ -13,6 +13,7 @@ from backend.model_training.model_registry import (
 
 pytestmark = pytest.mark.asyncio
 
+
 @pytest.fixture
 def iris_model():
     """
@@ -42,17 +43,19 @@ async def test_full_model_registry_flow(tmp_path, iris_model):
         mlflow.sklearn.log_model(iris_model, artifact_path="model")
         run_id = run.info.run_id
 
-    df = pd.DataFrame({
-        "run_id": [run_id],
-        "model_name": ["LogisticRegression"],
-        "encoder": ["None"],
-        "scaler": ["None"],
-        "feat_selection": ["None"],
-        "fbeta_1_5": [0.93],
-        "C": [1.0],
-        "max_iter": [1000],
-        "solver": ["lbfgs"],
-    })
+    df = pd.DataFrame(
+        {
+            "run_id": [run_id],
+            "model_name": ["LogisticRegression"],
+            "encoder": ["None"],
+            "scaler": ["None"],
+            "feat_selection": ["None"],
+            "fbeta_1_5": [0.93],
+            "C": [1.0],
+            "max_iter": [1000],
+            "solver": ["lbfgs"],
+        }
+    )
 
     await register_top_models(df, experiment_name="integration_test_exp", top_n=1)
 
@@ -66,7 +69,11 @@ async def test_full_model_registry_flow(tmp_path, iris_model):
     assert len(files) > 0, "No serialized model files found"
 
     # Clean up registry and local serialized files
-    models_deleted, files_deleted = await clean_model_registry_and_folder(serialized_dir)
+    models_deleted, files_deleted = await clean_model_registry_and_folder(
+        serialized_dir
+    )
 
-    assert models_deleted >= 1, "Expected at least one model to be deleted from registry"
+    assert (
+        models_deleted >= 1
+    ), "Expected at least one model to be deleted from registry"
     assert files_deleted >= 1, "Expected serialized files to be deleted"

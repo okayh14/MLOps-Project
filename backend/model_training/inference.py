@@ -4,6 +4,7 @@ import os
 import json
 from typing import List, Dict, Any
 
+
 def prepare_and_predict(features: List[Dict[str, Any]], serialized_models_dir: str):
     """
     Loads serialized models and applies them to the provided feature set for inference.
@@ -15,7 +16,7 @@ def prepare_and_predict(features: List[Dict[str, Any]], serialized_models_dir: s
     Returns:
         pd.DataFrame: Concatenated predictions from all models with corresponding model names.
     """
-    
+
     # Convert input features into a DataFrame
     prediction_df = pd.DataFrame(features)
 
@@ -41,14 +42,16 @@ def prepare_and_predict(features: List[Dict[str, Any]], serialized_models_dir: s
     for filename in os.listdir(serialized_models_dir):
         if filename.endswith(".pkl"):
             model_path = os.path.join(serialized_models_dir, filename)
-            
+
             # Load the model and predict probabilities
             model = joblib.load(model_path)
-            probas = model.predict_proba(prediction_df)[:, 1]  # Probability of positive class
-            
+            probas = model.predict_proba(prediction_df)[
+                :, 1
+            ]  # Probability of positive class
+
             # Extract classifier name from filename
             classifier_name = filename.split("_v")[0]
-            
+
             # Store predictions along with classifier name
             results.append(
                 pd.DataFrame(

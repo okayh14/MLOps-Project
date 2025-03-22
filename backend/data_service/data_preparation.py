@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def remove_null_values(df):
     """
     Removes rows from the DataFrame that contain any null (NaN) values.

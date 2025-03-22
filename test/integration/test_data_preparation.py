@@ -65,4 +65,3 @@ def test_data_preparation(sample_dataframe):
     # Check correct blood pressure values
     assert result["systolic_blood_pressure"].tolist() == [158, 165]
     assert result["diastolic_blood_pressure"].tolist() == [88, 93]
-    

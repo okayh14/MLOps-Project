@@ -6,6 +6,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import load_iris
 from backend.model_training.inference import prepare_and_predict
 
+
 @pytest.mark.asyncio
 async def test_inference_end_to_end(tmp_path):
     """

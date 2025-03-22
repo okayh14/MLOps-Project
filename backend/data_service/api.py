@@ -3,9 +3,14 @@ from sqlalchemy.orm import Session
 from backend.data_service.database import SessionLocal  # Database session factory
 from backend.data_service.models import PatientData  # SQLAlchemy model for patient data
 from pydantic import BaseModel  # For request validation
-from backend.data_service.data_preparation import data_preparation  # Data preprocessing logic
+from backend.data_service.data_preparation import (
+    data_preparation,
+)  # Data preprocessing logic
 import pandas as pd
-from backend.data_service.database import Base, engine  # SQLAlchemy base and engine for table creation
+from backend.data_service.database import (
+    Base,
+    engine,
+)  # SQLAlchemy base and engine for table creation
 from typing import List, Dict, Any
 
 # Create database tables if they do not exist
@@ -67,8 +72,7 @@ async def get_prepared_data(db: Session = Depends(get_db)):
 
     if not patients:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No data available"
+            status_code=status.HTTP_404_NOT_FOUND, detail="No data available"
         )
 
     # Convert patient objects to dictionaries, excluding SQLAlchemy metadata
@@ -125,14 +129,11 @@ async def create_patient(patient: PatientRequest, db: Session = Depends(get_db))
 
         # Add and persist the patient in the database
         db.add(new_patient)
-        db.flush()        # Executes SQL without committing yet
-        db.commit()       # Commits the transaction
+        db.flush()  # Executes SQL without committing yet
+        db.commit()  # Commits the transaction
         db.refresh(new_patient)  # Refresh instance with DB values
 
-        return {
-            'status': 'success',
-            'new_patient': new_patient
-        }
+        return {"status": "success", "new_patient": new_patient}
 
     except Exception as e:
         db.rollback()  # Roll back transaction in case of failure

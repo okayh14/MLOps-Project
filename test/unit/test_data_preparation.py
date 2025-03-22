@@ -13,10 +13,7 @@ def test_remove_null_values_removes_rows_with_nan():
     """
     Test that rows with null values are removed.
     """
-    df = pd.DataFrame({
-        "A": [1, None, 3],
-        "B": [4, 5, None]
-    })
+    df = pd.DataFrame({"A": [1, None, 3], "B": [4, 5, None]})
     result = remove_null_values(df)
     assert result.isnull().sum().sum() == 0
     assert result.shape[0] == 1
@@ -26,10 +23,7 @@ def test_remove_duplicates_removes_exact_copies():
     """
     Test that duplicate rows are removed.
     """
-    df = pd.DataFrame({
-        "A": [1, 1, 2],
-        "B": [3, 3, 4]
-    })
+    df = pd.DataFrame({"A": [1, 1, 2], "B": [3, 3, 4]})
     result = remove_duplicates(df)
     assert result.shape == (2, 2)
     assert not result.duplicated().any()
@@ -48,10 +42,7 @@ def test_remove_patient_id_removes_column_if_exists():
     """
     Test that 'patient_id' column is removed when present.
     """
-    df = pd.DataFrame({
-        "patient_id": ["X123", "Y456"],
-        "age": [30, 45]
-    })
+    df = pd.DataFrame({"patient_id": ["X123", "Y456"], "age": [30, 45]})
     result = remove_patient_id(df)
     assert "patient_id" not in result.columns
     assert "age" in result.columns
@@ -70,9 +61,7 @@ def test_split_blood_pressure_creates_two_numeric_columns():
     """
     Test that a valid blood_pressure column is split into systolic and diastolic parts.
     """
-    df = pd.DataFrame({
-        "blood_pressure": ["120/80", "140/90"]
-    })
+    df = pd.DataFrame({"blood_pressure": ["120/80", "140/90"]})
     result = split_blood_pressure(df)
     assert "systolic_blood_pressure" in result.columns
     assert "diastolic_blood_pressure" in result.columns
@@ -85,9 +74,7 @@ def test_split_blood_pressure_handles_invalid_format():
     """
     Test that invalid blood pressure formats do not create new columns.
     """
-    df = pd.DataFrame({
-        "blood_pressure": ["abc", "130", "120//80", None]
-    })
+    df = pd.DataFrame({"blood_pressure": ["abc", "130", "120//80", None]})
     result = split_blood_pressure(df)
 
     # Columns should not be created because split failed

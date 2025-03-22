@@ -4,6 +4,7 @@ import os
 from unittest.mock import patch
 from backend.model_training.model_training import main
 
+
 @pytest.mark.asyncio
 async def test_main_integration(tmp_path):
     """
@@ -27,16 +28,18 @@ async def test_main_integration(tmp_path):
         "sex": ["Male", "Female"] * 5,
         "heart_attack_risk": [0, 1] * 5,
     }
-    
+
     # Save the input data as a JSON file
     input_json_path = tmp_path / "input_data.json"
     with open(input_json_path, "w") as f:
         json.dump(input_data, f)
 
     # Mocking `mlflow.start_run` and other functions to avoid actual experiments
-    with patch("mlflow.start_run") as mock_start_run, \
-         patch("mlflow.log_param"), patch("mlflow.log_metrics"), patch("mlflow.sklearn.log_model"), \
-         patch("mlflow.register_model"), patch("mlflow.tracking.MlflowClient"):
+    with patch("mlflow.start_run") as mock_start_run, patch("mlflow.log_param"), patch(
+        "mlflow.log_metrics"
+    ), patch("mlflow.sklearn.log_model"), patch("mlflow.register_model"), patch(
+        "mlflow.tracking.MlflowClient"
+    ):
 
         # Call the main function (which covers all pipeline steps)
         result = await main(input_data)

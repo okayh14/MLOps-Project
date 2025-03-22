@@ -52,6 +52,7 @@ class LabelEncoderWrapper(BaseEstimator, TransformerMixin):
     This transformer stores encoders for each column and handles unknown values
     by adding an "Unknown" category during transformation.
     """
+
     def __init__(self):
         self.encoders = {}
 
@@ -89,8 +90,10 @@ class LabelEncoderWrapper(BaseEstimator, TransformerMixin):
             le = self.encoders.get(col)
             if le:
                 # Replace values not seen during training with "Unknown"
-                X_transformed[col] = X_transformed[col].astype(str).apply(
-                    lambda val: val if val in le.classes_ else "Unknown"
+                X_transformed[col] = (
+                    X_transformed[col]
+                    .astype(str)
+                    .apply(lambda val: val if val in le.classes_ else "Unknown")
                 )
                 # Add "Unknown" to classes if not already present
                 if "Unknown" not in le.classes_:
@@ -113,21 +116,25 @@ def configure_models(cat_cols):
     # Define encoding options for categorical features
     encoder_options = {
         "OneHot": ("onehot", OneHotEncoder(handle_unknown="ignore"), cat_cols),
-        "Ordinal": ("ordinal", OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1), cat_cols),
+        "Ordinal": (
+            "ordinal",
+            OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1),
+            cat_cols,
+        ),
         "Label": ("label", LabelEncoderWrapper(), cat_cols),
     }
-    
+
     # Define scaling options for features
     scaler_options = {
         "None": None,
         "Standard": StandardScaler(),
         "Robust": RobustScaler(),
     }
-    
+
     # Define incompatible combinations of encoders and scalers
     # OneHot encoding produces sparse matrices which are not compatible with scalers
     forbidden_combos = {("OneHot", "Standard"), ("OneHot", "Robust")}
-    
+
     # Define model types and their hyperparameter combinations to try
     model_param_grid = {
         "LogisticRegression": [
@@ -149,13 +156,13 @@ def configure_models(cat_cols):
             {"n_estimators": 200, "learning_rate": 0.05, "max_depth": 10},
         ],
     }
-    
+
     # Define feature selection options
     feat_select_options = {
         "None": None,
         "SelectKBest": SelectKBest(score_func=f_classif, k=5),
     }
-    
+
     # Define scoring metrics with custom fbeta metric that favors recall (beta=1.5)
     fbeta_1_5_scorer = make_scorer(fbeta_score, beta=1.5)
     scoring = {
@@ -165,7 +172,7 @@ def configure_models(cat_cols):
         "f1": "f1",
         "fbeta_1_5": fbeta_1_5_scorer,
     }
-    
+
     return (
         encoder_options,
         scaler_options,
@@ -286,12 +293,12 @@ def process_task(X, y, task, cv, scoring, experiment_name):
         # Start a new MLflow run for tracking this model configuration
         with mlflow.start_run(run_name=run_name):
             # Create directory for serialized models and save feature names
-            serialized_models_dir = './serialized_models'
+            serialized_models_dir = "./serialized_models"
             features_path = os.path.join(serialized_models_dir, "model_features.json")
             if not os.path.exists(features_path):
                 with open(features_path, "w") as f:
                     json.dump({"columns": list(X.columns)}, f)
-                    
+
             # Create the ML pipeline with selected components
             pipeline_steps = []
 
@@ -346,7 +353,7 @@ def process_task(X, y, task, cv, scoring, experiment_name):
             cv_scores = cross_validate(
                 pipeline, X, y, cv=cv, scoring=scoring, return_estimator=True
             )
-            
+
             # Calculate average metrics across all folds
             metrics_dict = {}
             for score_name in scoring.keys():
@@ -414,11 +421,11 @@ async def main(json_data):
         cat_cols = X.select_dtypes(include=["object", "category"]).columns.tolist()
 
         # Create directory for serialized models and save feature names
-        serialized_models_dir = './serialized_models'
+        serialized_models_dir = "./serialized_models"
         os.makedirs(serialized_models_dir, exist_ok=True)
         features_path = os.path.join(serialized_models_dir, "model_features.json")
         with open(features_path, "w") as f:
-                json.dump({"columns": list(X.columns)}, f)
+            json.dump({"columns": list(X.columns)}, f)
 
         # Log dataset statistics
         print(
