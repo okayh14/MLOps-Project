@@ -1,3 +1,4 @@
+# Import necessary libraries
 import warnings
 import datetime
 import os
@@ -25,23 +26,46 @@ from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from joblib import Parallel, delayed
 
+# Suppress warnings for cleaner output
 warnings.filterwarnings("ignore")
+# Initialize MLflow client for tracking experiments
 client = MlflowClient()
 
 
 def setup_experiment():
+    """
+    Creates a new MLflow experiment with a timestamp-based name.
+    
+    Returns:
+        str: Name of the created experiment
+    """
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     experiment_name = f"heart_attack_experiment_{timestamp}"
     mlflow.set_experiment(experiment_name)
     return experiment_name
 
 
-# Neuer LabelEncoderWrapper, der die Kategorien speichert
 class LabelEncoderWrapper(BaseEstimator, TransformerMixin):
+    """
+    Custom wrapper for sklearn's LabelEncoder that handles unknown categories.
+    
+    This transformer stores encoders for each column and handles unknown values
+    by adding an "Unknown" category during transformation.
+    """
     def __init__(self):
         self.encoders = {}
 
     def fit(self, X, y=None):
+        """
+        Fits a LabelEncoder for each column in the dataframe.
+        
+        Args:
+            X: DataFrame with categorical columns to encode
+            y: Target variable (not used, included for scikit-learn API compatibility)
+            
+        Returns:
+            self: The fitted encoder
+        """
         for col in X.columns:
             le = LabelEncoder()
             le.fit(X[col].astype(str))
@@ -49,36 +73,62 @@ class LabelEncoderWrapper(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        """
+        Transforms categorical columns using the fitted encoders.
+        
+        Handles unknown values by mapping them to a dedicated "Unknown" category.
+        
+        Args:
+            X: DataFrame with categorical columns to transform
+            
+        Returns:
+            DataFrame: Transformed data with encoded categories
+        """
         X_transformed = X.copy()
         for col in X.columns:
             le = self.encoders.get(col)
             if le:
-                # Werte, die unbekannt sind, ersetzen wir mit "Unknown"
+                # Replace values not seen during training with "Unknown"
                 X_transformed[col] = X_transformed[col].astype(str).apply(
                     lambda val: val if val in le.classes_ else "Unknown"
                 )
-                # Füge "Unknown" zu Klassen hinzu, falls noch nicht vorhanden
+                # Add "Unknown" to classes if not already present
                 if "Unknown" not in le.classes_:
                     le.classes_ = np.append(le.classes_, "Unknown")
                 X_transformed[col] = le.transform(X_transformed[col].astype(str))
         return X_transformed
 
 
-# ColumnTransformer mit OneHotEncoder anpassen
-# Wichtig: handle_unknown="ignore" ist bereits gesetzt für OneHotEncoder
-# Aber für OrdinalEncoder setzen wir es jetzt explizit auch.
 def configure_models(cat_cols):
+    """
+    Configures all model components and hyperparameter combinations for the experiment.
+    
+    Args:
+        cat_cols: List of categorical column names
+        
+    Returns:
+        tuple: Contains dictionaries for encoders, scalers, forbidden combinations,
+               model parameters, feature selection options, and scoring metrics
+    """
+    # Define encoding options for categorical features
     encoder_options = {
         "OneHot": ("onehot", OneHotEncoder(handle_unknown="ignore"), cat_cols),
         "Ordinal": ("ordinal", OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1), cat_cols),
         "Label": ("label", LabelEncoderWrapper(), cat_cols),
     }
+    
+    # Define scaling options for features
     scaler_options = {
         "None": None,
         "Standard": StandardScaler(),
         "Robust": RobustScaler(),
     }
+    
+    # Define incompatible combinations of encoders and scalers
+    # OneHot encoding produces sparse matrices which are not compatible with scalers
     forbidden_combos = {("OneHot", "Standard"), ("OneHot", "Robust")}
+    
+    # Define model types and their hyperparameter combinations to try
     model_param_grid = {
         "LogisticRegression": [
             {"C": 0.01, "max_iter": 300, "solver": "lbfgs"},
@@ -99,10 +149,14 @@ def configure_models(cat_cols):
             {"n_estimators": 200, "learning_rate": 0.05, "max_depth": 10},
         ],
     }
+    
+    # Define feature selection options
     feat_select_options = {
         "None": None,
         "SelectKBest": SelectKBest(score_func=f_classif, k=5),
     }
+    
+    # Define scoring metrics with custom fbeta metric that favors recall (beta=1.5)
     fbeta_1_5_scorer = make_scorer(fbeta_score, beta=1.5)
     scoring = {
         "accuracy": "accuracy",
@@ -111,6 +165,7 @@ def configure_models(cat_cols):
         "f1": "f1",
         "fbeta_1_5": fbeta_1_5_scorer,
     }
+    
     return (
         encoder_options,
         scaler_options,
@@ -135,13 +190,31 @@ def train_and_evaluate(
 ):
     """
     Train models using cross-validation and evaluate them with multiprocessing support.
+    
+    Args:
+        X: Feature dataframe
+        y: Target variable
+        encoder_options: Dictionary of encoding options
+        scaler_options: Dictionary of scaling options
+        forbidden_combos: Set of incompatible encoder-scaler combinations
+        model_param_grid: Dictionary of models and their hyperparameter combinations
+        feat_select_options: Dictionary of feature selection options
+        scoring: Dictionary of scoring metrics
+        experiment_name: Name of the MLflow experiment
+        n_jobs: Number of parallel jobs to run (-1 for all available cores)
+        
+    Returns:
+        DataFrame: Results of all model combinations with their metrics
     """
+    # Configure cross-validation strategy
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     results = []
 
+    # Create list of all possible model configurations to try
     tasks = []
     for encoder_name, (encoder_id, encoder_obj, enc_cols) in encoder_options.items():
         for scaler_name, scaler_obj in scaler_options.items():
+            # Skip incompatible combinations
             if (encoder_name, scaler_name) in forbidden_combos:
                 print(
                     f"Skipping incompatible combination: Encoder={encoder_name}, Scaler={scaler_name}"
@@ -172,13 +245,26 @@ def train_and_evaluate(
         for task in tasks
     )
 
+    # Return results as a dataframe, filtering out any failed runs
     return pd.DataFrame([r for r in results if r is not None])
 
 
 def process_task(X, y, task, cv, scoring, experiment_name):
     """
-    Process a single task for training and evaluation.
+    Process a single model training and evaluation task.
+    
+    Args:
+        X: Feature dataframe
+        y: Target variable
+        task: Tuple containing all parameters for this task
+        cv: Cross-validation strategy
+        scoring: Dictionary of scoring metrics
+        experiment_name: Name of the MLflow experiment
+        
+    Returns:
+        dict: Results for this model configuration or None if an error occurred
     """
+    # Unpack the task parameters
     (
         encoder_name,
         encoder_id,
@@ -193,20 +279,23 @@ def process_task(X, y, task, cv, scoring, experiment_name):
         param_idx,
     ) = task
 
+    # Create a descriptive run name for MLflow tracking
     run_name = f"{model_name}_enc={encoder_name}_sc={scaler_name}_fs={fs_name}_paramset_{param_idx}"
 
     try:
+        # Start a new MLflow run for tracking this model configuration
         with mlflow.start_run(run_name=run_name):
+            # Create directory for serialized models and save feature names
             serialized_models_dir = './serialized_models'
             features_path = os.path.join(serialized_models_dir, "model_features.json")
             if not os.path.exists(features_path):
                 with open(features_path, "w") as f:
                     json.dump({"columns": list(X.columns)}, f)
                     
-            # Create pipeline
+            # Create the ML pipeline with selected components
             pipeline_steps = []
 
-            # Encoder
+            # Add appropriate encoder to the pipeline
             if encoder_id in ("onehot", "ordinal"):
                 ct_transformers = []
                 if len(enc_cols) > 0:
@@ -218,15 +307,15 @@ def process_task(X, y, task, cv, scoring, experiment_name):
             elif encoder_id == "label":
                 pipeline_steps.append(("label_encoder", encoder_obj))
 
-            # Scaler
+            # Add scaler to the pipeline if specified
             if scaler_obj is not None:
                 pipeline_steps.append((f"scaler_{scaler_name}", scaler_obj))
 
-            # Feature Selection
+            # Add feature selection to the pipeline if specified
             if fs_obj is not None:
                 pipeline_steps.append((fs_name, fs_obj))
 
-            # Classifier
+            # Add the classifier to the pipeline with specified hyperparameters
             if model_name == "LogisticRegression":
                 clf = LogisticRegression(**params, random_state=42)
             elif model_name == "RandomForest":
@@ -244,7 +333,7 @@ def process_task(X, y, task, cv, scoring, experiment_name):
             pipeline_steps.append(("clf", clf))
             pipeline = Pipeline(steps=pipeline_steps)
 
-            # Log parameters
+            # Log all parameters to MLflow
             mlflow.log_param("encoder", encoder_name)
             mlflow.log_param("scaler", scaler_name)
             mlflow.log_param("feature_selection", fs_name)
@@ -253,24 +342,24 @@ def process_task(X, y, task, cv, scoring, experiment_name):
             for k, v in params.items():
                 mlflow.log_param(k, v)
 
-            # Cross-validation
+            # Perform cross-validation and save each fold's model
             cv_scores = cross_validate(
                 pipeline, X, y, cv=cv, scoring=scoring, return_estimator=True
             )
-            # Calculate metrics
+            
+            # Calculate average metrics across all folds
             metrics_dict = {}
             for score_name in scoring.keys():
                 metrics_dict[score_name] = np.mean(cv_scores[f"test_{score_name}"])
 
-            # Log metrics
+            # Log metrics to MLflow
             mlflow.log_metrics(metrics_dict)
 
-            # Log model
-            # Choose a specific fold's model (e.g., the first one)
+            # Save the model from first fold as an artifact
             best_model = cv_scores["estimator"][0]  # Or choose based on performance
             mlflow.sklearn.log_model(best_model, artifact_path="model")
 
-            # Compile results
+            # Compile results for the results dataframe
             run_id = mlflow.active_run().info.run_id
             result = {
                 "run_id": run_id,
@@ -284,10 +373,12 @@ def process_task(X, y, task, cv, scoring, experiment_name):
             result.update(params)
             result.update(metrics_dict)
 
+            # End the MLflow run
             mlflow.end_run()
             return result
 
     except Exception as e:
+        # Handle and log any errors
         print(f"Error in run {run_name}: {e}")
         if mlflow.active_run():
             mlflow.end_run()
@@ -296,7 +387,13 @@ def process_task(X, y, task, cv, scoring, experiment_name):
 
 async def main(json_data):
     """
-    Main function to orchestrate the entire training and model registration pipeline
+    Main function to orchestrate the entire training and model registration pipeline.
+    
+    Args:
+        json_data: JSON data containing features and target variable
+        
+    Returns:
+        dict: Status and summary of the training process
     """
     try:
         # Setup experiment
@@ -316,18 +413,19 @@ async def main(json_data):
         y = df[target_col]
         cat_cols = X.select_dtypes(include=["object", "category"]).columns.tolist()
 
+        # Create directory for serialized models and save feature names
         serialized_models_dir = './serialized_models'
         os.makedirs(serialized_models_dir, exist_ok=True)
         features_path = os.path.join(serialized_models_dir, "model_features.json")
         with open(features_path, "w") as f:
                 json.dump({"columns": list(X.columns)}, f)
 
-
+        # Log dataset statistics
         print(
             f"Data loaded: {X.shape[0]} samples, {X.shape[1]} features, {len(cat_cols)} categorical features"
         )
 
-        # Configure models and parameters
+        # Configure all model components and hyperparameters
         (
             encoder_options,
             scaler_options,
@@ -337,7 +435,7 @@ async def main(json_data):
             scoring,
         ) = configure_models(cat_cols)
 
-        # Train and evaluate models
+        # Train and evaluate all model combinations
         print("Starting training pipeline...")
         results_df = train_and_evaluate(
             X,
@@ -351,12 +449,14 @@ async def main(json_data):
             experiment_name,
         )
 
-        # Register top models
+        # Commented out model registration code
         # register_top_models(results_df, experiment_name, top_n=5)
 
+        # Print summary of training process
         print("\n=== Training Completed ===")
         print(f"Experiment name: {experiment_name}")
 
+        # Return results
         return {
             "status": "success",
             "experiment_name": experiment_name,
@@ -365,5 +465,6 @@ async def main(json_data):
         }
 
     except Exception as e:
+        # Handle and log any errors
         print(f"Error in training pipeline: {e}")
         return {"status": "error", "message": str(e)}

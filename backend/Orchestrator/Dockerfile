@@ -1,18 +1,21 @@
+# Use Python 3.9 base image
 FROM python:3.9
 
+# Set working directory inside the container
 WORKDIR /app
 
-# Install dependencies
+# Copy requirements and install Python dependencies without caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code
+# Copy the rest of the application code into the container
 COPY . .
 
-# Make sure Orchestrator is a package (create __init__.py)
+# Ensure the application is treated as a Python package (needed for module imports)
 RUN touch /app/__init__.py
 
+# Expose port 8003 so the app is accessible outside the container
 EXPOSE 8003
 
-# Start orchestrator
+# Command to run the FastAPI app using Uvicorn with hot-reload enabled
 CMD ["uvicorn", "orchestrator:app", "--host", "0.0.0.0", "--port", "8003", "--reload"]

@@ -1,22 +1,22 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from database import SessionLocal  # Datenbankverbindung importieren
-from models import PatientData
-from pydantic import BaseModel
-from data_preparation import data_preparation
+from database import SessionLocal  # Database session factory
+from models import PatientData  # SQLAlchemy model for patient data
+from pydantic import BaseModel  # For request validation
+from data_preparation import data_preparation  # Data preprocessing logic
 import pandas as pd
-from database import Base, engine
+from database import Base, engine  # SQLAlchemy base and engine for table creation
 from typing import List, Dict, Any
 
-
+# Create database tables if they do not exist
 Base.metadata.create_all(bind=engine)
 
-# Initialize FastAPI app
+# Initialize FastAPI application instance
 app = FastAPI()
 
 
-# Dependency, die eine Session zurückgibt und sicherstellt,
-# dass sie geschlossen wird.
+# Dependency for getting a new database session
+# Ensures the session is properly closed after use
 def get_db():
     db = SessionLocal()
     try:
@@ -55,48 +55,59 @@ class PatientRequest(BaseModel):
     heart_attack_risk: bool
 
 
-# GET endpoint to fetch and process all patient data
+# GET endpoint for fetching and preprocessing all stored patient data
 @app.get("/data")
 async def get_prepared_data(db: Session = Depends(get_db)):
-    """API-Endpunkt, der alle Patienten aus der Datenbank abruft und verarbeitet."""
-
-    # Alle Patienten aus der DB holen
+    """
+    Retrieves all patient records from the database,
+    applies data preprocessing, and returns the processed data.
+    """
+    # Query all patients from the database
     patients = db.query(PatientData).all()
 
     if not patients:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No data available"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No data available"
         )
 
-    # Alle Patienten-Datensätze in Dictionaries umwandeln (SQLAlchemy-Metadaten rausfiltern)
+    # Convert patient objects to dictionaries, excluding SQLAlchemy metadata
     raw_data = [
         {k: v for k, v in vars(patient).items() if k != "_sa_instance_state"}
         for patient in patients
     ]
 
-    # In DataFrame umwandeln
+    # Convert to pandas DataFrame for preprocessing
     df = pd.DataFrame(raw_data)
 
-    # Datenvorbereitung
+    # Apply preprocessing logic
     prepared_data = data_preparation(df)
 
-    # Rückgabe als JSON
+    # Return the cleaned/prepared data as JSON
     return prepared_data.to_dict(orient="records")
 
 
+# POST endpoint for cleaning uploaded patient data without saving to DB
 @app.post("/clean")
 async def clean_data_api(patients: List[Dict[str, Any]], drop_target: bool = False):
+    """
+    Accepts patient data, preprocesses it and returns the cleaned dataset.
+    Useful for preprocessing before training or testing.
+    """
     test_patient = pd.DataFrame(patients)
     prepared_df = data_preparation(test_patient, drop_target=drop_target)
     return prepared_df.to_dict(orient="records")
 
 
-# POST-Endpoint zum Hinzufügen eines Patienten
+# POST endpoint to add a new patient to the database
 @app.post("/patients", status_code=status.HTTP_201_CREATED)
 async def create_patient(patient: PatientRequest, db: Session = Depends(get_db)):
-    """Erstellt einen neuen Patienten in der Datenbank."""
+    """
+    Adds a new patient entry to the database.
+    Checks for duplicate patient_id before inserting.
+    """
     try:
-        # Prüfen, ob die Patient-ID bereits existiert
+        # Check if the patient ID already exists
         if (
             db.query(PatientData)
             .filter(PatientData.patient_id == patient.patient_id)
@@ -104,26 +115,28 @@ async def create_patient(patient: PatientRequest, db: Session = Depends(get_db))
         ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Patient mit dieser ID existiert bereits.",
+                detail="Patient with this ID already exists.",
             )
         try:
-
-            # Neuen Patienten anlegen
+            # Create a new PatientData instance using unpacked validated data
             new_patient = PatientData(**patient.model_dump())
         except Exception as e:
             print(e)
 
+        # Add and persist the patient in the database
         db.add(new_patient)
-        db.flush()  # Führt SQL aus, aber committet noch nicht
-        db.commit()  # Speichert die Änderungen
-        db.refresh(new_patient)  # Holt die aktualisierten Daten aus der DB
+        db.flush()        # Executes SQL without committing yet
+        db.commit()       # Commits the transaction
+        db.refresh(new_patient)  # Refresh instance with DB values
 
-        return {'status':'success',
-                'new_patient': new_patient}  # Gibt den neu erstellten Patienten zurück
+        return {
+            'status': 'success',
+            'new_patient': new_patient
+        }
 
     except Exception as e:
-        db.rollback()
+        db.rollback()  # Roll back transaction in case of failure
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ein Fehler ist aufgetreten: {str(e)}",
+            detail=f"An error occurred: {str(e)}",
         )

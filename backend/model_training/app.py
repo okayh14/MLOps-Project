@@ -16,18 +16,27 @@ from inference import prepare_and_predict
 import joblib
 import httpx
 
+# Initialize FastAPI app
 app = FastAPI()
+
+# Initialize MLflow client
 client = MlflowClient()
 
+# Path where models will be serialized and stored
 SERIALIZED_MODELS_DIR = "./serialized_models"
+
+# URL for the data service (can be overridden with environment variable)
 DATA_SERVICE_URL = os.getenv("DATA_SERVICE_URL", "http://data_service:8001")
 
 
 @app.post("/train")
 async def start_training(training_data: List[Dict[str, Any]]):
     """
-    Endpoint to initiate the training process.
-    Expects JSON data which will be passed to the training function.
+    Starts the model training pipeline:
+    - Cleans existing models
+    - Trains models on provided data
+    - Registers top-performing models
+    - Serializes and compresses models for inference
     """
     try:
         await clean_model_registry_and_folder(SERIALIZED_MODELS_DIR)
@@ -44,6 +53,11 @@ async def start_training(training_data: List[Dict[str, Any]]):
 
 @app.post("/inference")
 async def inference(features: List[Dict[str, Any]]):
+    """
+    Runs inference on the provided patient features using the latest models.
+    - If no serialized models are found, tries to regenerate them.
+    - Returns prediction results and mean probability of risk.
+    """
     try:
         print("\n[DEBUG] Received features:")
         print(features)
@@ -72,23 +86,24 @@ async def inference(features: List[Dict[str, Any]]):
     except Exception as e:
         import traceback
         print("\n[ERROR] Inference crashed with exception:")
-        traceback.print_exc()  # <== Ohne das bekommen wir keinen Stacktrace!
+        traceback.print_exc()  # This prints the full stack trace for debugging
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/check")
 async def check_registry():
     """
-    Check for the existence of serialized model files and respond accordingly.
+    Health check endpoint to verify availability of serialized models.
+    - Creates the model directory and serializes models if necessary.
+    - Returns the number of model files found.
     """
-    """Ensure model directory exists on startup."""
     try:
-        # Create the directory and serialize models if it doesn't exist
+        # Ensure the model directory exists and serialize models if missing
         if not os.path.exists(SERIALIZED_MODELS_DIR):
             os.makedirs(SERIALIZED_MODELS_DIR, exist_ok=True)
             await serialize_and_compress_models(SERIALIZED_MODELS_DIR)
 
-        # Count the number of files in the directory
+        # Count model files in the directory
         file_count = sum(len(files) for _, _, files in os.walk(SERIALIZED_MODELS_DIR))
         if file_count < 1:
             return {"message": "No models available."}

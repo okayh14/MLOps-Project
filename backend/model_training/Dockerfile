@@ -1,16 +1,17 @@
 FROM python:3.9
 
+# Set the working directory inside the container
 WORKDIR /app
 
-# Kopiere Requirements und installiere sie
+# Copy the requirements file and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Kopiere den gesamten Code ins Image
+# Copy all project files into the container
 COPY . .
 
-# Exponiere den Port 
+# Expose the port that the service will run on
 EXPOSE 8002
 
-# Starte FastAPI
+# Start the FastAPI application using Uvicorn
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
