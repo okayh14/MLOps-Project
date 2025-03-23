@@ -5,7 +5,7 @@ FROM python:3.9
 WORKDIR /app/backend/model_training
 
 # Copy the requirements file and install dependencies
-COPY requirements.txt .
+COPY backend/model_training/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Add PYTHONPATH so "from backend.xyz" works

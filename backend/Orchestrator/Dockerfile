@@ -5,7 +5,7 @@ FROM python:3.9
 WORKDIR /app/backend/Orchestrator
 
 # Copy requirements and install Python dependencies without caching
-COPY requirements.txt .
+COPY backend/Orchestrator/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Set PYTHONPATH so "from backend.xyz" works

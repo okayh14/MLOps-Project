@@ -5,7 +5,7 @@ FROM python:3.9
 WORKDIR /app/backend/data_service
 
 # Copy and install dependencies
-COPY requirements.txt .
+COPY backend/data_service/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Add PYTHONPATH so "from backend.xyz" works
