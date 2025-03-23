@@ -1,6 +1,6 @@
 Code Coverage: [![codecov](https://codecov.io/gh/michellebinder/heart-disease-prediction/branch/testing/graph/badge.svg)](https://codecov.io/gh/michellebinder/heart-disease-prediction)
 
-Frontend (gehosted bei Azure):  [[Web-Anwendung]](http://predictmyheart.westeurope.cloudapp.azure.com:8501/ )
+Frontend (gehosted bei Azure):  [Web-Anwendung](http://predictmyheart.westeurope.cloudapp.azure.com:8501/ )
 
 # MLOps Project
 Dieses Projekt umfasst eine End-to-End-MLOps-Lösung, die Datenverarbeitung, Modelltraining, Inferenz und Orchestrierung über FastAPI-Microservices integriert. Das Projekt umfasst CI/CD-Automatisierung mit GitHub Actions und Testabdeckungsberichte über Codecov.
