@@ -5,15 +5,15 @@ Ziel ist es, Ärzt:innen im klinischen Alltag eine fundierte Entscheidungsunters
 
 Die Anwendung wurde im Rahmen einer medizinischen Pilotstudie konzipiert und verbindet moderne Machine-Learning-Technologien mit einem robusten, wartbaren MLOps-Stack.
 
-🔗 **Live-Demo (Frontend auf Azure):** [Web-Anwendung starten](http://predictmyheart.westeurope.cloudapp.azure.com:8501/)
+**Live-Demo (Frontend auf Azure):** [Web-Anwendung starten](http://predictmyheart.westeurope.cloudapp.azure.com:8501/)
 
-📄 **Technische Dokumentation & Entwicklerinfos:** [Wiki ansehen](https://github.com/okayh14/MLOps-Project/wiki)  
+**Technische Dokumentation & Entwicklerinfos:** [Wiki ansehen](https://github.com/okayh14/MLOps-Project/wiki)  
 
-📊 **Code Coverage:** [![codecov](https://codecov.io/gh/michellebinder/heart-disease-prediction/branch/testing/graph/badge.svg)](https://codecov.io/gh/michellebinder/heart-disease-prediction)
+**Code Coverage:** [![codecov](https://codecov.io/gh/michellebinder/heart-disease-prediction/branch/testing/graph/badge.svg)](https://codecov.io/gh/michellebinder/heart-disease-prediction)
 
 ---
 
-# 🚀 Getting Started
+# Getting Started
 
 ## Variante 1: Docker (empfohlen)
 
@@ -37,14 +37,14 @@ docker-compose up --build
 
 Hinweis: Nach einmaligen build kann das System über docker-compose up bzw. docker-compose down gesteuert werden. Die Daten werden über Volumes persistiert und gehen nicht verloren.
 
-Startet:
+Nach dem Start erreichst du die Web-Oberfläche unter [http://localhost:8501](http://localhost:8501)
 
-Data Service (:8001)
-Model Training Service (:8002)
-Orchestrator (:8000)
-PostgreSQL-Datenbank
-Streamlit Web-UI (:8501)
-
+Folgende Services laufen im Hintergrund:
+- Data Service (Port 8001)
+- Model Training Service (Port 8002)
+- Orchestrator (Port 8000)
+- PostgreSQL-Datenbank
+  
 ---
 
 ## Variante 2: Manuelles Setup
@@ -92,5 +92,6 @@ uvicorn backend.model_training.app:app --reload --port 8002
 uvicorn backend.Orchestrator.Orchestrator:app --reload --port 8000
 ```
 
-📚 **Weitere Entwicklerhinweise (Branching, Erweiterung, VSCode-Setup etc.)**  
-👉 [Entwicklerhandbuch – Wiki](https://github.com/okayh14/MLOps-Project/wiki/8.-Entwicklerhandbuch)
+## How to Contribute
+Alle Infos zur lokalen Entwicklung, Branching-Strategie, Testabdeckung, API-Erweiterung und mehr finden sich im
+[Kapitel 8 – How to Contribute (Wiki)](https://github.com/okayh14/MLOps-Project/wiki/8.-How-to-Contribute)
