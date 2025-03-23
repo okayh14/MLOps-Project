@@ -3,6 +3,7 @@ from mlflow.tracking import MlflowClient
 import os
 import joblib
 import shutil
+import pandas as pd
 
 client = MlflowClient()
 
@@ -185,7 +186,7 @@ async def clean_model_registry_and_folder(folder_path=None):
     if folder_path:
         if os.path.exists(folder_path):
             try:
-                file_count = sum([len(files) for _, _, files in os.walk(folder_path)])
+                sum([len(files) for _, _, files in os.walk(folder_path)])
 
                 for item in os.listdir(folder_path):
                     item_path = os.path.join(folder_path, item)
