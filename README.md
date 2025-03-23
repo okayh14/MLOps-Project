@@ -35,14 +35,28 @@ cd MLOps-Project
 docker-compose up --build
 ```
 
-**Hinweis:** Nach einmaligen build kann das System über docker-compose up bzw. docker-compose down gesteuert werden. Die Daten werden über Volumes persistiert und gehen nicht verloren.
+**Wichtig:** 
 
-Nach dem Start ist die Web-Oberfläche erreichbar unter [http://localhost:8501](http://localhost:8501)
+Der erste Build und Compose-Vorgang kann – abhängig von der Rechenleistung des Computers – zwischen 6 und 15 Minuten in Anspruch nehmen, da dabei ein Training angestoßen wird. Nach dem initialen Build werden alle relevanten Daten über Volumes gespeichert.
+
+Das laufende Training erkennt man daran, dass im Terminal entsprechende Warnmeldungen ausgegeben werden. Diese Meldungen sind kein Grund zur Sorge, sondern zeigen lediglich an, dass das Training aktiv ist. Sobald diese Warnungen aufhören, gibt der Model Service eine Bestätigung aus, dass fünf Modelle erfolgreich geloggt wurden.
+
+Das System ist einsatzbereit, sobald im Terminal folgende Meldung erscheint:
+
+```bash
+orchestrator INFO: Application startup complete.
+```
+
+Ab diesem Zeitpunkt senden der Model Service und der Data Service im Sekundentakt GET-Requests (Status 200), was als Indikator dient, dass das System aktiv läuft.
+
+Die Web-Oberfläche ist anschließend unter [http://localhost:8501](http://localhost:8501) erreichbar.
+
+Nach dem einmaligen Build kann das System jederzeit über docker-compose up bzw. docker-compose down gestartet oder gestoppt werden. Sämtliche Daten bleiben dank der Nutzung von Volumes dauerhaft erhalten.
 
 **Folgende Services laufen im Hintergrund:**
 - Data Service (Port 8001)
 - Model Training Service (Port 8002)
-- Orchestrator (Port 8000)
+- Orchestrator (Port 8003)
 - PostgreSQL-Datenbank
   
 ---
@@ -74,22 +88,14 @@ env\Scripts\activate       # Windows
 pip install --upgrade pip
 pip install -r backend/data_service/requirements.txt
 pip install -r backend/model_training/requirements.txt
-pip install -r backend/orchestrator/requirements.txt
+pip install -r backend/Orchestrator/requirements.txt
 pip install -r test/requirements.txt
 ```
 
 **Schritt 4:** Tests ausführen (optional)
 
 ```bash
-pytest --cov=backend test/
-```
-
-**Schritt 5:** Manuelles Starten der Services (optional)
-
-```bash
-uvicorn backend.data_service.api.api:app --reload --port 8001
-uvicorn backend.model_training.app:app --reload --port 8002
-uvicorn backend.Orchestrator.Orchestrator:app --reload --port 8000
+pytest test/
 ```
 
 ## How to Contribute
