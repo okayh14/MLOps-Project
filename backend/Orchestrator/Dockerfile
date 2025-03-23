@@ -1,15 +1,15 @@
 # Use Python 3.9 base image
 FROM python:3.9
 
-# Set working directory inside the container
-WORKDIR /app
+# Set the working directory to the Orchestrator module
+WORKDIR /app/backend/Orchestrator
 
 # Copy requirements and install Python dependencies without caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code into the container
-COPY . .
+# Set PYTHONPATH so "from backend.xyz" works
+ENV PYTHONPATH=/app
 
 # Ensure the application is treated as a Python package (needed for module imports)
 RUN touch /app/__init__.py

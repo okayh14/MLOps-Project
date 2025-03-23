@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   db:
@@ -22,8 +22,8 @@ services:
 
   data_service:
     build:
-      context: ./backend/data_service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/data_service/Dockerfile
     container_name: data_service
     depends_on:
       db:
@@ -34,10 +34,20 @@ services:
     environment:
       DATABASE_URL: "postgresql://sami:secret@db:5432/heart_risk_data"
     volumes:
-      - ./backend/data_service:/app
-    command: ["bash", "-c", "python init.py && uvicorn api:app --host 0.0.0.0 --port 8001 --reload"]
+      - .:/app
+    working_dir: /app/backend/data_service
+    command:
+      [
+        "bash",
+        "-c",
+        "python init.py && uvicorn api:app --host 0.0.0.0 --port 8001 --reload",
+      ]
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8001/data | grep -q . || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -sf http://localhost:8001/data | grep -q . || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -57,12 +67,17 @@ services:
     environment:
       DATA_SERVICE_URL: "http://data_service:8001"
     volumes:
-      - ./backend/model_training:/app
-      - ./backend/model_training/mlruns_data:/app/mlruns
-      - ./backend/model_training/serialized_models:/app/serialized_models
-    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
+      - .:/app
+      - ./backend/model_training/serialized_models:/app/backend/model_training/serialized_models
+      - ./backend/model_training/mlruns_data:/app/backend/model_training/mlruns_data
+    command:
+      ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8002/check | grep -q . || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -sf http://localhost:8002/check | grep -q . || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -82,9 +97,18 @@ services:
       DATA_SERVICE_URL: "http://data_service:8001"
       MODEL_SERVICE_URL: "http://model_training:8002"
     volumes:
-      - ./backend/Orchestrator:/app
-    command: ["uvicorn", "orchestrator:app", "--host", "0.0.0.0", "--port", "8003", "--reload"]
-    
+      - .:/app
+    working_dir: /app/backend/Orchestrator
+    command:
+      [
+        "uvicorn",
+        "orchestrator:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8003",
+        "--reload",
+      ]
 
   frontend:
     build:
@@ -92,7 +116,7 @@ services:
       dockerfile: Dockerfile
     container_name: streamlit_frontend
     depends_on:
-      - orchestrator  
+      - orchestrator
     restart: unless-stopped
     ports:
       - "8501:8501"
@@ -100,8 +124,14 @@ services:
       ORCHESTRATOR_URL: "http://orchestrator:8003"
     volumes:
       - ./frontend:/app
-    command: ["streamlit", "run", "/app/Home.py", "--server.port=8501", "--server.address=0.0.0.0"]
-
+    command:
+      [
+        "streamlit",
+        "run",
+        "/app/Home.py",
+        "--server.port=8501",
+        "--server.address=0.0.0.0",
+      ]
 
 volumes:
   heart_risk_db_data:

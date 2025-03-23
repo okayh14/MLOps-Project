@@ -2,14 +2,14 @@
 FROM python:3.9
 
 # Set working directory inside container
-WORKDIR /app
+WORKDIR /app/backend/data_service
 
 # Copy and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Add PYTHONPATH so "from backend.xyz" works
+ENV PYTHONPATH=/app
 
 # Create wait-for-db script to wait until Postgres is ready before starting app
 RUN echo '#!/bin/bash\n\

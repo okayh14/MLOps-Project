@@ -1,13 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from database import SessionLocal  # Database session factory
-from models import PatientData  # SQLAlchemy model for patient data
+from backend.data_service.database import SessionLocal  # Database session factory
+from backend.data_service.models import PatientData  # SQLAlchemy model for patient data
 from pydantic import BaseModel  # For request validation
-from data_preparation import (
+from backend.data_service.data_preparation import (
     data_preparation,
 )  # Data preprocessing logic
 import pandas as pd
-from database import (
+from backend.data_service.database import (
     Base,
     engine,
 )  # SQLAlchemy base and engine for table creation
