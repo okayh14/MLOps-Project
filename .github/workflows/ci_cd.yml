@@ -35,18 +35,6 @@ jobs:
           echo "Running Black..."
           black --check .
 
-  # upload-coverage:
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
-
-  #     - name: Upload coverage to Codecov
-  #       uses: codecov/codecov-action@v3
-  #       with:
-  #         files: ./test-reports/coverage.xml
-  #         fail_ci_if_error: false
   test:
     name: Run Tests & Upload Coverage
     runs-on: ubuntu-latest
