@@ -1,36 +1,67 @@
-[![codecov](https://codecov.io/gh/michellebinder/heart-disease-prediction/branch/testing/graph/badge.svg)](https://codecov.io/gh/michellebinder/heart-disease-prediction)
+Code Coverage: [![codecov](https://codecov.io/gh/michellebinder/heart-disease-prediction/branch/testing/graph/badge.svg)](https://codecov.io/gh/michellebinder/heart-disease-prediction)
 
-## Virtual Environment Setup
+Frontend (gehosted bei Azure):  [![Web-Anwendung](http://predictmyheart.westeurope.cloudapp.azure.com:8501/ )]
 
-### macOS/Linux
+# MLOps Project
+Dieses Projekt umfasst eine End-to-End-MLOps-Lösung, die Datenverarbeitung, Modelltraining, Inferenz und Orchestrierung über FastAPI-Microservices integriert. Das Projekt umfasst CI/CD-Automatisierung mit GitHub Actions und Testabdeckungsberichte über Codecov.
 
-```bash
-python3 -m venv env
-source env/bin/activate
-pip install --upgrade pip
-pip install -r backend/data_service/requirements.txt
-pip install -r backend/model_training/requirements.txt
-pip install -r backend/orchestrator/requirements.txt
-pip install -r test/requirements.txt
+## Overview
+Dieses Projekt modelliert eine vollständige MLOps-Pipeline mit modularer Microservices-Architektur:
+- **Data Service**: Datenbereinigung und -präprozessierung
+- **Model Training**: Training, Inferenz and Modellverwaltung
+- **Orchestrator**: Koordinierung der Services und API Management
+
+**Ordnerstruktur**
 ```
-
-### Windows
-
-```bash
-python3 -m venv env
-env\Scripts\activate
-pip install --upgrade pip
-pip install -r backend/data_service/requirements.txt
-pip install -r backend/model_training/requirements.txt
-pip install -r backend/orchestrator/requirements.txt
-pip install -r test/requirements.txt
+backend/
+  ├── data_service/           # Datenvorverarbeitung und -bereinigung
+  ├── model_training/         # Training, Inferenz, Modellverwaltung
+  ├── Orchestrator/           # FastAPI Serviceorchestrierung
+test/
+  ├── integration/            # Integration tests
+  ├── unit/                   # Unit tests
 ```
+### Quick Navigation:
 
-nacheinander ausführen:
+>Für Funktionalitäten bezüglich Modelltraining und -verwaltung sowie Inferenz: [`backend/model_service`](./backend/model_service)
 
-1. docker compose build --no-cache
-2. docker compose up
+>Für Funktionalitäten bezüglich Datenmanagement: [`backend/data_service`](./backend/data_service)
 
-nur wenn man wieder stoppen will:
+>Für Funktionalitäten bezüglich Orchestrierung: [`backend/Orchestrator`](./backend/Orchestrator)
 
-3. docker compose down --volumes --remove-orphans
+## CI/CD Pipeline
+Die CI/CD-Pipeline läuft automatisch bei Push und Pull-Requests und umfasst:
+
+- Code Formatierung mit `Black`
+- Linting mit `Flake8`
+- Entfernen ungenutzter Importe mit `Autoflake`
+- Unit und Integrationtests mit Testcoverage Monitoring
+- Testcoverage upload nach `Codecov`
+
+Durch einen Push und durch eine Pull-Request wir die CI/CD-Pipeline gestartet.
+
+## Branching-Strategie
+
+Zur strukturierten Zusammenarbeit im Team folgt dieses Projekt einer klaren Branching-Strategie:
+
+- `main`: Stabiler, getesteter Code. Repräsentiert die aktuelle, funktionierende Version.
+
+- `production`: Wird von `main` abgezweigt und dient für den Deployment auf Azure.
+
+- `develop`: Hauptentwicklungszweig. Hier fließen neue Features und Bugfixes ein.
+
+- `testing`: Dient zur Implementierung und Ausführung von Tests vor dem Merge in `main`.
+
+### Feature- und Bugfix-Branches
+
+**Neues Feature:**
+- branch von develop: feature/feature-name
+
+**Bugfix:**
+- branch von develop: bugfix/bug-name
+
+Sobald die Entwicklung eines Features oder Bugfixes abgeschlossen ist, wird der entsprechende Branch in den `develop` - Branch gemergt.
+
+Anschließend kann ein temporärer `testing`- Branch von `develop`erstellt werden, um umfassende Tests durchzuführen.
+
+Nach erfolgreichem Abschluss aller Tests und Code-Reviews wird der `develop`- Branch in den `main`- Branch gemergt, wodurch ein stabiler, produktionsreifer Stand sichergestellt wird.
