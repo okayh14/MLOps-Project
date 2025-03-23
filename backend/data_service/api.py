@@ -4,12 +4,12 @@ from backend.data_service.database import SessionLocal  # Database session facto
 from backend.data_service.models import PatientData  # SQLAlchemy model for patient data
 from pydantic import BaseModel  # For request validation
 from backend.data_service.data_preparation import (
-    data_preparation
+    data_preparation,
 )  # Data preprocessing logic
 import pandas as pd
 from backend.data_service.database import (
     Base,
-    engine
+    engine,
 )  # SQLAlchemy base and engine for table creation
 from typing import List, Dict, Any
 
