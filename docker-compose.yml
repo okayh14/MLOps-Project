@@ -33,14 +33,12 @@ services:
       - "8001:8001"
     environment:
       DATABASE_URL: "postgresql://sami:secret@db:5432/heart_risk_data"
-    volumes:
-      - .:/app
     working_dir: /app/backend/data_service
     command:
       [
         "bash",
         "-c",
-        "python init.py && uvicorn api:app --host 0.0.0.0 --port 8001 --reload",
+        "python init.py && uvicorn api:app --host 0.0.0.0 --port 8001",
       ]
     healthcheck:
       test:
@@ -66,12 +64,11 @@ services:
       - "8002:8002"
     environment:
       DATA_SERVICE_URL: "http://data_service:8001"
+    working_dir: /app/backend/model_training
     volumes:
-      - .:/app
-      - ./backend/model_training/serialized_models:/app/backend/model_training/serialized_models
-      - ./backend/model_training/mlruns_data:/app/backend/model_training/mlruns_data
-    command:
-      ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
+      - model_mlruns:/app/backend/model_training/mlruns_data
+      - model_serialized:/app/backend/model_training/serialized_models
+    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8002"]
     healthcheck:
       test:
         [
@@ -96,19 +93,9 @@ services:
     environment:
       DATA_SERVICE_URL: "http://data_service:8001"
       MODEL_SERVICE_URL: "http://model_training:8002"
-    volumes:
-      - .:/app
     working_dir: /app/backend/Orchestrator
     command:
-      [
-        "uvicorn",
-        "orchestrator:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8003",
-        "--reload",
-      ]
+      ["uvicorn", "orchestrator:app", "--host", "0.0.0.0", "--port", "8003"]
 
   frontend:
     build:
@@ -122,16 +109,17 @@ services:
       - "8501:8501"
     environment:
       ORCHESTRATOR_URL: "http://orchestrator:8003"
-    volumes:
-      - ./frontend:/app
+    working_dir: /app
     command:
       [
         "streamlit",
         "run",
-        "/app/Home.py",
+        "Home.py",
         "--server.port=8501",
         "--server.address=0.0.0.0",
       ]
 
 volumes:
   heart_risk_db_data:
+  model_mlruns:
+  model_serialized:
