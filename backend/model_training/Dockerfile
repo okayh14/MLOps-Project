@@ -8,8 +8,8 @@ WORKDIR /app/backend/model_training
 COPY backend/model_training/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire model_training service code into the container
-COPY backend/model_training .
+# Copy the whole project into the container
+COPY . .
 
 # Add PYTHONPATH so "from backend.xyz" imports work everywhere
 ENV PYTHONPATH=/app

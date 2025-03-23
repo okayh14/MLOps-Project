@@ -8,8 +8,8 @@ WORKDIR /app/backend/Orchestrator
 COPY backend/Orchestrator/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the orchestrator code into the container
-COPY backend/Orchestrator .
+# Copy the whole project into the container
+COPY . .
 
 # Set PYTHONPATH so "from backend.xyz" imports work
 ENV PYTHONPATH=/app

@@ -8,8 +8,8 @@ WORKDIR /app/backend/data_service
 COPY backend/data_service/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy service code
-COPY backend/data_service .
+# Copy the whole project into the container
+COPY . .
 
 # Set PYTHONPATH so "from backend.xyz" works
 ENV PYTHONPATH=/app
