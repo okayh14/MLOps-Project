@@ -56,7 +56,7 @@ jobs:
 
       - name: Run Pytest with Coverage
         run: |
-          PYTHONPATH=. pytest --cov=backend --cov-report=xml test/
+          PYTHONPATH=backend/model_training:backend/data_service pytest --cov=backend --cov-report=xml test/
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
