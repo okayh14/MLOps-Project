@@ -55,8 +55,8 @@ services:
 
   model_training:
     build:
-      context: ./backend/model_training
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/model_training/Dockerfile
     container_name: model_training
     depends_on:
       data_service:
@@ -85,8 +85,8 @@ services:
 
   orchestrator:
     build:
-      context: ./backend/Orchestrator
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Orchestrator/Dockerfile
     container_name: orchestrator
     depends_on:
       - model_training
