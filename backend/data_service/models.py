@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, Boolean, String, Float
-from backend.data_service.database import (
+from database import (
     Base,
 )  # Import the declarative base from the database module
 

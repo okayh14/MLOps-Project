@@ -3,13 +3,13 @@ from fastapi.responses import JSONResponse
 from typing import List, Dict, Any
 import os
 from mlflow.tracking import MlflowClient
-from backend.model_training.model_registry import (
+from model_registry import (
     register_top_models,
     serialize_and_compress_models,
     clean_model_registry_and_folder,
 )
-from backend.model_training.model_training import main
-from backend.model_training.inference import prepare_and_predict
+from model_training import main
+from inference import prepare_and_predict
 
 # Initialize FastAPI app
 app = FastAPI()
