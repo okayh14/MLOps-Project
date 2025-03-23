@@ -35,11 +35,11 @@ cd MLOps-Project
 docker-compose up --build
 ```
 
-Hinweis: Nach einmaligen build kann das System über docker-compose up bzw. docker-compose down gesteuert werden. Die Daten werden über Volumes persistiert und gehen nicht verloren.
+**Hinweis:** Nach einmaligen build kann das System über docker-compose up bzw. docker-compose down gesteuert werden. Die Daten werden über Volumes persistiert und gehen nicht verloren.
 
 Nach dem Start ist die Web-Oberfläche erreichbar unter [http://localhost:8501](http://localhost:8501)
 
-Folgende Services laufen im Hintergrund:
+**Folgende Services laufen im Hintergrund:**
 - Data Service (Port 8001)
 - Model Training Service (Port 8002)
 - Orchestrator (Port 8000)
