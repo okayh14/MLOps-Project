@@ -23,17 +23,23 @@ jobs:
       - name: Install Linting Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 "black[jupyter]"==23.3.0
+          pip install flake8 "black[jupyter]"==23.3.0 autoflake
+          
+      - name: Run Autoflake (Remove Unused Imports & Vars)
+        run: |
+          echo "Running autoflake..."
+          autoflake --remove-all-unused-imports --remove-unused-variables --in-place --recursive backend
+
+
+      - name: Run Black (Code Formatting Check)
+        run: |
+          echo "Running Black..."
+          black .
 
       - name: Run Flake8 (Linting)
         run: |
           echo "Running Flake8..."
           flake8 --config=.flake8 --show-source --statistics .
-
-      - name: Run Black (Code Formatting Check)
-        run: |
-          echo "Running Black..."
-          black --check .
 
   test:
     name: Run Tests & Upload Coverage
