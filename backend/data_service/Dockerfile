@@ -9,7 +9,7 @@ COPY backend/data_service/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the whole project into the container
-COPY . .
+COPY . /app
 
 # Set PYTHONPATH so "from backend.xyz" works
 ENV PYTHONPATH=/app

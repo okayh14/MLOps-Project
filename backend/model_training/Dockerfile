@@ -9,7 +9,7 @@ COPY backend/model_training/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the whole project into the container
-COPY . .
+COPY . /app
 
 # Add PYTHONPATH so "from backend.xyz" imports work everywhere
 ENV PYTHONPATH=/app
