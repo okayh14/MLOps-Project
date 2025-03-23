@@ -2,66 +2,65 @@ Code Coverage: [![codecov](https://codecov.io/gh/michellebinder/heart-disease-pr
 
 Frontend (gehosted bei Azure):  [Web-Anwendung](http://predictmyheart.westeurope.cloudapp.azure.com:8501/ )
 
-# MLOps Project
-Dieses Projekt umfasst eine End-to-End-MLOps-Lösung, die Datenverarbeitung, Modelltraining, Inferenz und Orchestrierung über FastAPI-Microservices integriert. Das Projekt umfasst CI/CD-Automatisierung mit GitHub Actions und Testabdeckungsberichte über Codecov.
+# Getting Started
 
-## Overview
-Dieses Projekt modelliert eine vollständige MLOps-Pipeline mit modularer Microservices-Architektur:
-- **Data Service**: Datenbereinigung und -präprozessierung
-- **Model Training**: Training, Inferenz and Modellverwaltung
-- **Orchestrator**: Koordinierung der Services und API Management
+## Prerequisites
 
-**Ordnerstruktur**
+- Python 3.9 or higher
+- Git
+- pip
+
+## Repository klonen
+
+```bash
+git clone https://github.com/okayh14/MLOps-Project.git
+cd MLOps-Project
 ```
-backend/
-  ├── data_service/           # Datenvorverarbeitung und -bereinigung
-  ├── model_training/         # Training, Inferenz, Modellverwaltung
-  ├── Orchestrator/           # FastAPI Serviceorchestrierung
-test/
-  ├── integration/            # Integration tests
-  ├── unit/                   # Unit tests
+## Optional virtuelle Umgebung aufsetze
+
+```bash
+python3 -m venv env
 ```
-### Quick Navigation:
+**Aktivierung der virtuellen Umgebung**
 
->Für Funktionalitäten bezüglich Modelltraining und -verwaltung sowie Inferenz: [`backend/model_service`](./backend/model_service)
+_Unter Windows:_
+```bash
+env\Scripts\activate
+```
+_Unter macOS/Linux:_
+```bash
+source env/bin/activate
+```
+## Installation der Abhängigkeiten
 
->Für Funktionalitäten bezüglich Datenmanagement: [`backend/data_service`](./backend/data_service)
+```bash
+#Upgrade pip
+pip install --upgrade pip
+```
 
->Für Funktionalitäten bezüglich Orchestrierung: [`backend/Orchestrator`](./backend/Orchestrator)
+```bash
+pip install -r backend/data_service/requirements.txt
+pip install -r backend/model_training/requirements.txt
+pip install -r backend/orchestrator/requirements.txt
+```
+## Installation der Abhängigkeiten fürs Testing
+```
+pip install -r test/requirements.txt
+```
+### Durchführung der Tests
+```bash
+pytest --cov=backend test/
+```
 
-## CI/CD Pipeline
-Die CI/CD-Pipeline läuft automatisch bei Push und Pull-Requests und umfasst:
+## Starten der Services
+```bash
+# Start Data Service
+uvicorn backend.data_service.api.api:app --reload --port 8001
 
-- Code Formatierung mit `Black`
-- Linting mit `Flake8`
-- Entfernen ungenutzter Importe mit `Autoflake`
-- Unit und Integrationtests mit Testcoverage Monitoring
-- Testcoverage upload nach `Codecov`
+# Start Model Training Service
+uvicorn backend.model_training.app:app --reload --port 8002
 
-Durch einen Push und durch eine Pull-Request wir die CI/CD-Pipeline gestartet.
+# Start Orchestrator
+uvicorn backend.Orchestrator.Orchestrator:app --reload --port 8000
+```
 
-## Branching-Strategie
-
-Zur strukturierten Zusammenarbeit im Team folgt dieses Projekt einer klaren Branching-Strategie:
-
-- `main`: Stabiler, getesteter Code. Repräsentiert die aktuelle, funktionierende Version.
-
-- `production`: Wird von `main` abgezweigt und dient für den Deployment auf Azure.
-
-- `develop`: Hauptentwicklungszweig. Hier fließen neue Features und Bugfixes ein.
-
-- `testing`: Dient zur Implementierung und Ausführung von Tests vor dem Merge in `main`.
-
-### Feature- und Bugfix-Branches
-
-**Neues Feature:**
-- branch von develop: feature/feature-name
-
-**Bugfix:**
-- branch von develop: bugfix/bug-name
-
-Sobald die Entwicklung eines Features oder Bugfixes abgeschlossen ist, wird der entsprechende Branch in den `develop` - Branch gemergt.
-
-Anschließend kann ein temporärer `testing`- Branch von `develop`erstellt werden, um umfassende Tests durchzuführen.
-
-Nach erfolgreichem Abschluss aller Tests und Code-Reviews wird der `develop`- Branch in den `main`- Branch gemergt, wodurch ein stabiler, produktionsreifer Stand sichergestellt wird.
