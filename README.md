@@ -1,66 +1,96 @@
-Code Coverage: [![codecov](https://codecov.io/gh/michellebinder/heart-disease-prediction/branch/testing/graph/badge.svg)](https://codecov.io/gh/michellebinder/heart-disease-prediction)
+# Heart Attack Risk Prediction – MLOps Project
 
-Frontend (gehosted bei Azure):  [Web-Anwendung](http://predictmyheart.westeurope.cloudapp.azure.com:8501/ )
+Dieses Projekt entwickelt ein ML-gestütztes System zur Einschätzung des individuellen Herzinfarktrisikos.  
+Ziel ist es, Ärzt:innen im klinischen Alltag eine fundierte Entscheidungsunterstützung bereitzustellen – auf Basis anonymisierter Gesundheitsdaten, wissenschaftlicher Modelle und transparenter Prognoselogik.
 
-# Getting Started
+Die Anwendung wurde im Rahmen einer medizinischen Pilotstudie konzipiert und verbindet moderne Machine-Learning-Technologien mit einem robusten, wartbaren MLOps-Stack.
 
-## Prerequisites
+🔗 **Live-Demo (Frontend auf Azure):** [Web-Anwendung starten](http://predictmyheart.westeurope.cloudapp.azure.com:8501/)
 
-- Python 3.9 or higher
-- Git
-- pip
+📄 **Technische Dokumentation & Entwicklerinfos:** [Wiki ansehen](https://github.com/okayh14/MLOps-Project/wiki)  
 
-## Repository klonen
+📊 **Code Coverage:** [![codecov](https://codecov.io/gh/michellebinder/heart-disease-prediction/branch/testing/graph/badge.svg)](https://codecov.io/gh/michellebinder/heart-disease-prediction)
 
+---
+
+# 🚀 Getting Started
+
+## Variante 1: Docker (empfohlen)
+
+Die bevorzugte Methode für lokale Ausführung und Entwicklung.
+Docker bündelt alle Services in einer Umgebung – ohne manuelles Setup oder Abhängigkeitskonflikte.
+
+**Schritt 1:** Docker installieren
+Download [Docker Desktop](https://www.docker.com/get-started/)
+
+**Schritt 2:** Repository klonen
 ```bash
 git clone https://github.com/okayh14/MLOps-Project.git
 cd MLOps-Project
 ```
-## Optional virtuelle Umgebung aufsetze
 
+**Schritt 3:** Im Projektverzeichnis folgenden Befehl ausführen
+
+```bash
+docker-compose up --build
+```
+
+Hinweis: Nach einmaligen build kann das System über docker-compose up bzw. docker-compose down gesteuert werden. Die Daten werden über Volumes persistiert und gehen nicht verloren.
+
+Startet:
+
+Data Service (:8001)
+Model Training Service (:8002)
+Orchestrator (:8000)
+PostgreSQL-Datenbank
+Streamlit Web-UI (:8501)
+
+---
+
+## Variante 2: Manuelles Setup
+
+Falls du das Projekt **ohne Docker** starten möchtest – z. B. zur gezielten Anpassung einzelner Services oder zu Debugging-Zwecken – folge dieser Anleitung:
+
+### Voraussetzungen
+- Python 3.9 oder höher
+- Git
+- `pip` Paketmanager
+
+**Schritt 1:** Repository klonen
+```bash
+git clone https://github.com/okayh14/MLOps-Project.git
+cd MLOps-Project
+```
+
+**Schritt 2:** Virtuelle Umgebung erstellen & aktivieren (empfohlen)
 ```bash
 python3 -m venv env
+source env/bin/activate    # macOS/Linux
+env\Scripts\activate       # Windows
 ```
-**Aktivierung der virtuellen Umgebung**
 
-_Unter Windows:_
+**Schritt 3:** Abhängigkeiten installieren
 ```bash
-env\Scripts\activate
-```
-_Unter macOS/Linux:_
-```bash
-source env/bin/activate
-```
-## Installation der Abhängigkeiten
-
-```bash
-#Upgrade pip
 pip install --upgrade pip
-```
-
-```bash
 pip install -r backend/data_service/requirements.txt
 pip install -r backend/model_training/requirements.txt
 pip install -r backend/orchestrator/requirements.txt
-```
-## Installation der Abhängigkeiten fürs Testing
-```
 pip install -r test/requirements.txt
 ```
-### Durchführung der Tests
+
+**Schritt 4:** Tests ausführen (optional)
+
 ```bash
 pytest --cov=backend test/
 ```
 
-## Starten der Services
+**Schritt 5:** Manuelles Starten der Services (optional)
+
 ```bash
-# Start Data Service
 uvicorn backend.data_service.api.api:app --reload --port 8001
-
-# Start Model Training Service
 uvicorn backend.model_training.app:app --reload --port 8002
-
-# Start Orchestrator
 uvicorn backend.Orchestrator.Orchestrator:app --reload --port 8000
 ```
 
+📚 **Weitere Entwicklerhinweise (Branching, Erweiterung, VSCode-Setup etc.)**  
+👉 [Entwicklerhandbuch – Wiki](https://github.com/okayh14/MLOps-Project/wiki/8.-Entwicklerhandbuch)
