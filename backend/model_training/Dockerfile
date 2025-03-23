@@ -4,11 +4,14 @@ FROM python:3.9
 # Set the working directory inside the container
 WORKDIR /app/backend/model_training
 
-# Copy the requirements file and install dependencies
+# Copy only the requirements file and install dependencies
 COPY backend/model_training/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Add PYTHONPATH so "from backend.xyz" works
+# Copy the entire model_training service code into the container
+COPY backend/model_training .
+
+# Add PYTHONPATH so "from backend.xyz" imports work everywhere
 ENV PYTHONPATH=/app
 
 # Expose the port that the service will run on

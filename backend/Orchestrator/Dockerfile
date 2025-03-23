@@ -4,18 +4,18 @@ FROM python:3.9
 # Set the working directory to the Orchestrator module
 WORKDIR /app/backend/Orchestrator
 
-# Copy requirements and install Python dependencies without caching
+# Copy requirements and install dependencies
 COPY backend/Orchestrator/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Set PYTHONPATH so "from backend.xyz" works
-ENV PYTHONPATH=/app
+# Copy the orchestrator code into the container
+COPY backend/Orchestrator .
 
-# Ensure the application is treated as a Python package (needed for module imports)
-RUN touch /app/__init__.py
+# Set PYTHONPATH so "from backend.xyz" imports work
+ENV PYTHONPATH=/app
 
 # Expose port 8003 so the app is accessible outside the container
 EXPOSE 8003
 
-# Command to run the FastAPI app using Uvicorn with hot-reload enabled
+# Run the FastAPI app with hot-reload
 CMD ["uvicorn", "orchestrator:app", "--host", "0.0.0.0", "--port", "8003", "--reload"]
